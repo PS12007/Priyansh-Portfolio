@@ -1,0 +1,457 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priyansh Sharma - Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        // Immediate color initialization to prevent black screen
+        (function() {
+            const root = document.documentElement;
+            root.style.setProperty('--bg-primary', '#000000');
+            root.style.setProperty('--bg-secondary', '#0a0a0a');
+            root.style.setProperty('--bg-tertiary', '#141414');
+            root.style.setProperty('--text-primary', '#ffffff');
+            root.style.setProperty('--text-secondary', '#b0b0b0');
+            root.style.setProperty('--text-muted', '#666666');
+            root.style.setProperty('--accent-1', '#ff0080');
+            root.style.setProperty('--accent-2', '#ff8000');
+            root.style.setProperty('--accent-3', '#ffff00');
+            root.style.setProperty('--accent-4', '#80ff00');
+            root.style.setProperty('--accent-5', '#00ff80');
+            root.style.setProperty('--accent-6', '#00ffff');
+            root.style.setProperty('--accent-7', '#0080ff');
+            root.style.setProperty('--accent-8', '#8000ff');
+        })();
+    </script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="#home" class="logo">
+                    <span class="logo-text">Priyansh</span>
+                    <span class="logo-underline"></span>
+                </a>
+            </div>
+            <div class="nav-center">
+                <a href="#home" class="nav-link">Home</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="#projects" class="nav-link">Projects</a>
+                <a href="#experience" class="nav-link">Experience</a>
+                <a href="#skills" class="nav-link">Skills</a>
+                <a href="#interests" class="nav-link">Interests</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </div>
+            <div class="nav-right">
+                <button type="button" class="settings-btn" id="settingsBtn" aria-label="Settings" onclick="window.toggleSettingsPanel && window.toggleSettingsPanel()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="nav-underline"></div>
+    </nav>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2>Theme Customizer</h2>
+            <button type="button" class="settings-close" id="settingsClose" aria-label="Close settings">×</button>
+        </div>
+        <div class="settings-content">
+            <div class="setting-group">
+                <label class="setting-label">Theme Mode</label>
+                <div class="toggle-group">
+                    <button class="theme-toggle active" data-theme="dark">Black RGB</button>
+                    <button class="theme-toggle" data-theme="light">White RGB</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">
+                    <input type="checkbox" id="rainbowToggle" class="checkbox" checked>
+                    <span>Rainbow Effects</span>
+                </label>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">Color System</label>
+                <div class="color-mode-selector">
+                    <button class="color-mode-btn active" data-mode="rainbow">Rainbow</button>
+                    <button class="color-mode-btn" data-mode="custom">Custom</button>
+                    <button class="color-mode-btn" data-mode="custom-static">Custom Static</button>
+                    <button class="color-mode-btn" data-mode="custom-animated">Custom Animated</button>
+                </div>
+            </div>
+
+            <div class="setting-group" id="presetGroup">
+                <label class="setting-label">Preset Themes</label>
+                <div class="preset-buttons">
+                    <button class="preset-btn" data-preset="jungle">Jungle</button>
+                    <button class="preset-btn" data-preset="sand">Sand</button>
+                    <button class="preset-btn" data-preset="ocean">Ocean</button>
+                    <button class="preset-btn" data-preset="cyber">Cyber</button>
+                    <button class="preset-btn" data-preset="mono">Mono</button>
+                    <button class="preset-btn" data-preset="lava">Lava</button>
+                    <button class="preset-btn" data-preset="custom">Custom</button>
+                </div>
+            </div>
+
+            <div class="setting-group" id="customThemeGroup" style="display: none;">
+                <label class="setting-label">Custom Theme Colors</label>
+                <div class="custom-theme-pickers">
+                    <div class="theme-color-item">
+                        <label>Background</label>
+                        <input type="color" id="customBgPrimary" value="#000000">
+                    </div>
+                    <div class="theme-color-item">
+                        <label>Secondary BG</label>
+                        <input type="color" id="customBgSecondary" value="#0a0a0a">
+                    </div>
+                    <div class="theme-color-item">
+                        <label>Text Primary</label>
+                        <input type="color" id="customTextPrimary" value="#ffffff">
+                    </div>
+                    <div class="theme-color-item">
+                        <label>Text Secondary</label>
+                        <input type="color" id="customTextSecondary" value="#b0b0b0">
+                    </div>
+                    <div class="theme-color-item">
+                        <label>Accent Color 1</label>
+                        <input type="color" id="customAccent1" value="#ff0080">
+                    </div>
+                    <div class="theme-color-item">
+                        <label>Accent Color 2</label>
+                        <input type="color" id="customAccent2" value="#00ffff">
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-group" id="customColorsGroup" style="display: none;">
+                <label class="setting-label">Custom Colors (1-6)</label>
+                <div class="color-picker-container" id="colorPickerContainer">
+                    <!-- Dynamically generated color pickers -->
+                </div>
+                <button class="add-color-btn" id="addColorBtn">+ Add Color</button>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">
+                    Rainbow Speed
+                    <span class="setting-value" id="speedValue">75%</span>
+                </label>
+                <input type="range" class="slider" id="speedSlider" min="0" max="100" value="75">
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">
+                    Glow Intensity
+                    <span class="setting-value" id="glowValue">50%</span>
+                </label>
+                <input type="range" class="slider" id="glowSlider" min="0" max="100" value="50">
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">
+                    <input type="checkbox" id="motionReduce" class="checkbox">
+                    <span>Reduce Motion</span>
+                </label>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">
+                    <input type="checkbox" id="cursorEffects" class="checkbox">
+                    <span>Cursor Effects</span>
+                </label>
+            </div>
+
+            <div class="setting-group" id="cursorSettingsGroup" style="display: none;">
+                <label class="setting-label">
+                    Cursor Size
+                    <span class="setting-value" id="cursorSizeValue">20px</span>
+                </label>
+                <input type="range" class="slider" id="cursorSizeSlider" min="10" max="40" value="20">
+                
+                <label class="setting-label" style="margin-top: 1rem;">
+                    Cursor Glow
+                    <span class="setting-value" id="cursorGlowValue">50%</span>
+                </label>
+                <input type="range" class="slider" id="cursorGlowSlider" min="0" max="100" value="50">
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">
+                    <input type="checkbox" id="particlesToggle" class="checkbox">
+                    <span>Background Particles</span>
+                </label>
+            </div>
+
+            <div class="setting-group" id="particlesSettingsGroup" style="display: none;">
+                <label class="setting-label">
+                    Particle Density
+                    <span class="setting-value" id="particleDensityValue">50%</span>
+                </label>
+                <input type="range" class="slider" id="particleDensitySlider" min="0" max="100" value="50">
+                
+                <label class="setting-label" style="margin-top: 1rem;">
+                    Particle Speed
+                    <span class="setting-value" id="particleSpeedValue">50%</span>
+                </label>
+                <input type="range" class="slider" id="particleSpeedSlider" min="0" max="100" value="50">
+            </div>
+
+            <div class="setting-group">
+                <button type="button" class="reset-btn" id="resetSettingsBtn">Reset to Defaults</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cursor Trail -->
+    <div class="cursor-trail" id="cursorTrail"></div>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero section">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        <span class="highlight-rainbow" data-text="systems">Software</span>.
+                        <span class="highlight-rainbow" data-text="code">Engineering</span>.
+                        <span class="highlight-rainbow" data-text="experiences">Business</span>.
+                    </h1>
+                    <p class="hero-description">
+                        An engineering student working on software and technical projects.
+                        Drawn to the intersection of engineering, business, and real-world impact.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="#projects" class="btn btn-primary">View Projects</a>
+                        <a href="#contact" class="btn btn-secondary">Get In Touch</a>
+                    </div>
+                </div>
+                <div class="hero-image-container">
+                    <div class="image-wrapper">
+                        <div class="image-glow"></div>    
+                        <img src="images/priyanshs.png" class="hero-image">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">About</h2>
+                    <div class="section-divider"></div>
+                    <p class="section-subtitle">Who I am and what drives me</p>
+                </div>
+                <div class="about-content">
+                    <p class="about-text">
+                        I’m an engineering student working at the intersection of software, problem-solving, and business. 
+                        My focus is on building practical, well-designed technical solutions while developing the strategic thinking needed to turn ideas into scalable ventures.
+                    </p>
+                    <p class="about-text">
+                        Alongside my studies, I’m working on startup ideas and independent projects. 
+                        I’m driven by curiosity and a desire to build things with real impact.
+                        I plan to pursue a dual degree in Engineering and the Ivey HBA. 
+                        My goal is to combine strong technical skills with business leadership to take ideas from concept to market.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects" class="section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">Projects</h2>
+                    <div class="section-divider"></div>
+                    <p class="section-subtitle">Selected work and case studies</p>
+                </div>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <div class="project-card-glow"></div>
+                        <h3 class="project-title">Stealth</h3>
+                        <p class="project-description">
+                            A backend system focused on detecting silent failures, issues where systems appear healthy but are partially degraded or producing incorrect results.
+                             It monitors behavioral signals, anomalies, and inconsistencies across services to surface failures that traditional alerts often miss.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">Python</span>
+                            <span class="tag">HTML</span>
+                            <span class="tag">CSS</span>
+                        </div>
+                        <a href="#" class="project-link">View Project →</a>
+                    </div>
+                    <div class="project-card">
+                        <div class="project-card-glow"></div>
+                        <h3 class="project-title">Boredom Tracker</h3>
+                        <p class="project-description">
+                            A productivity and self-awareness tool that helps users identify patterns of boredom and low engagement throughout their day. 
+                            Users can log activities, track mood trends, and receive insights to improve focus and daily habits through a clean, intuitive interface.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">React</span>
+                            <span class="tag">Node.js</span>
+                            <span class="tag">Data Visualization</span>
+                        </div>
+                        <a href="#" class="project-link">View Project →</a>
+                    </div>
+                    <div class="project-card">
+                        <div class="project-card-glow"></div>
+                        <h3 class="project-title">Rocket Simulator</h3>
+                        <p class="project-description">
+                            An interactive physics-based rocket simulation that models thrust, gravity, drag, and orbital motion in real time. 
+                            Built to visualize complex aerospace concepts with smooth animations and adjustable parameters, allowing users to experiment with different launch conditions and flight profiles.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">React</span>
+                            <span class="tag">TypeScript</span>
+                            <span class="tag">Physics Modeling</span>
+                        </div>
+                        <a href="#" class="project-link">View Project →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experience Section -->
+        <section id="experience" class="section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">Experience</h2>
+                    <div class="section-divider"></div>
+                    <p class="section-subtitle">Professional journey and milestones</p>
+                </div>
+                <div class="experience-list">
+                    <div class="experience-item experience-left">
+                        <div class="experience-date">2025 - Present</div>
+                        <div class="experience-content">
+                            <h3 class="experience-title">Founder</h3>
+                            <p class="experience-company">Startup (Stealth Mode)</p>
+                            <p class="experience-description">
+                                Working on an early-stage startup, handling product development, technical decisions, and implementation. 
+                                Focused on building core functionality, testing ideas quickly, and iterating based on real feedback.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="experience-item experience-right">
+                        <div class="experience-date">2023 - Present</div>
+                        <div class="experience-content">
+                            <h3 class="experience-title">Freelance Developer</h3>
+                            <p class="experience-company">Independent</p>
+                            <p class="experience-description">
+                                Built websites and small web applications for local and online clients. 
+                                Worked directly with clients to scope requirements, implement solutions, and deliver clean, functional products.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="experience-item experience-left">
+                        <div class="experience-date">2025</div>
+                        <div class="experience-content">
+                            <h3 class="experience-title">Intern</h3>
+                            <p class="experience-company">Avante Pathways</p>
+                            <p class="experience-description">
+                                Built web and AI tools for education, focusing on resumes and college applications.
+                                Managed marketing campaigns and content that reached 5M+ views, while honing coding, web, and product skills.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section id="skills" class="section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">Skills</h2>
+                    <div class="section-divider"></div>
+                    <p class="section-subtitle">Technologies and tools I work with</p>
+                </div>
+                <div class="skills-grid">
+                    <div class="skill-card">
+                        <div class="skill-icon">⚡</div>
+                        <h3 class="skill-name">Frontend</h3>
+                        <p class="skill-list">React, Vue, TypeScript, HTML/CSS</p>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">🔧</div>
+                        <h3 class="skill-name">Backend</h3>
+                        <p class="skill-list">Node.js, Python, Django, Express</p>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">💾</div>
+                        <h3 class="skill-name">Database</h3>
+                        <p class="skill-list">PostgreSQL, MongoDB, Redis</p>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">☁️</div>
+                        <h3 class="skill-name">DevOps</h3>
+                        <p class="skill-list">AWS, Docker, Kubernetes, CI/CD</p>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">🎨</div>
+                        <h3 class="skill-name">Design</h3>
+                        <p class="skill-list">Figma, UI/UX, Design Systems</p>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">🚀</div>
+                        <h3 class="skill-name">Tools</h3>
+                        <p class="skill-list">Git, Webpack, Vite, Jest</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interests Section -->
+        <section id="interests" class="section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">Interests</h2>
+                    <div class="section-divider"></div>
+                    <p class="section-subtitle">Beyond code and design</p>
+                </div>
+                <div class="interests-preview">
+                    <p class="interests-text">
+                        Explore my passions and hobbies.
+                    </p>
+                    <a href="interests.html" class="btn btn-primary">View All Interests →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">Contact</h2>
+                    <div class="section-divider"></div>
+                    <p class="section-subtitle">Let's build something together</p>
+                </div>
+                <div class="contact-content">
+                    <p class="contact-text">
+                        I'm always open to discussing new projects, creative ideas, or opportunities to be part of your vision.
+                    </p>
+                    <div class="contact-buttons">
+                        <a href="mailto:priyanshcan@gmail.com" class="btn btn-primary">Send Email</a>
+                        <a href="https://www.linkedin.com/in/priyansh-sharma-ps12" class="btn btn-secondary" target="_blank">LinkedIn</a>
+                        <a href="https://github.com/PS12007" class="btn btn-secondary" target="_blank">GitHub</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
