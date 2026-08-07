@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Priyansh Sharma — Engineer</title>
+<meta name="description" content="Priyansh Sharma — Mechatronic Systems Engineering student at Western University (Ivey HBA, AEO Stream). Experience in software engineering, machine learning, and full-stack development." />
+<meta name="keywords" content="Priyansh Sharma, software engineer, mechatronic systems engineering, Western University, Ivey HBA, machine learning, full stack developer, Python, React, PyTorch" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Priyansh Sharma",
+  "jobTitle": "Software Engineer",
+  "alumniOf": "Western University",
+  "url": "https://priyansh.dev",
+  "sameAs": ["https://github.com/PS12007", "https://linkedin.com/in/priyansh-sharma"],
+  "knowsAbout": ["Software Engineering", "Machine Learning", "Full-Stack Development", "Mechatronic Systems Engineering"]
+}
+</script>
+</head>
+<body>
+
+<div class="gradient-bg" id="gradientBg" aria-hidden="true"></div>
+
+<header class="site-nav">
+  <nav class="nav-links">
+    <a href="#home">Home</a>
+    <a href="#experience">Experience</a>
+    <a href="#projects">Projects</a>
+    <a href="#skills">Skills</a>
+    <a href="#education">Education</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<div class="corner">
+  <button class="palette-dot" id="paletteToggle" type="button" aria-label="Change background palette" aria-pressed="false"></button>
+  <div class="corner-links">
+    <a href="mailto:hello@priyansh.dev">Email</a>
+    <a href="https://linkedin.com/in/priyansh-sharma" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="https://github.com/PS12007" target="_blank" rel="noopener">GitHub</a>
+    <a href="resume.pdf" target="_blank" rel="noopener">Resume</a>
+  </div>
+</div>
+
+<main>
+
+  <section id="home" class="section hero">
+    <h1 class="reveal">Priyansh Sharma</h1>
+    <p class="hero-role reveal">Software Engineer · Mechatronic Systems · Founder</p>
+    <p class="hero-bio reveal">Mechatronic Systems Engineering student at Western University, dual-degree with Ivey Business School (HBA, AEO Stream). I build full-stack products and machine learning tools, and I'm currently building an early-stage startup in stealth.</p>
+    <p class="location reveal">London, Ontario</p>
+  </section>
+
+  <section id="experience" class="section">
+    <p class="eyebrow reveal">Experience</p>
+
+    <article class="entry reveal">
+      <div class="entry-head">
+        <h3>Founder — Stealth Startup</h3>
+        <span class="entry-date">2025 — Present</span>
+      </div>
+      <ul>
+        <li>Leading product, design, and engineering for an early-stage software startup, end to end</li>
+        <li>Building and testing MVPs quickly, cutting features that don't hold up under real usage</li>
+        <li>Full-stack development, 0 → 1 execution, solo technical direction</li>
+      </ul>
+    </article>
+
+    <article class="entry reveal">
+      <div class="entry-head">
+        <h3>Software Engineering Intern — Avante Pathways</h3>
+        <span class="entry-date">2025</span>
+      </div>
+      <ul>
+        <li>Built AI-powered tools for resume writing and college application workflows using OpenAI APIs</li>
+        <li>Developed across the full stack in Python, React, and Node.js</li>
+        <li>Ran marketing campaigns and content alongside core engineering work</li>
+      </ul>
+    </article>
+
+    <article class="entry reveal">
+      <div class="entry-head">
+        <h3>Freelance Developer — Independent</h3>
+        <span class="entry-date">2023 — Present</span>
+      </div>
+      <ul>
+        <li>Designed and built websites and web applications for local and online clients</li>
+        <li>Scoped requirements directly with clients and delivered production-ready software end to end</li>
+      </ul>
+    </article>
+  </section>
+
+  <section id="projects" class="section">
+    <p class="eyebrow reveal">Projects</p>
+
+    <article class="project reveal">
+      <div class="entry-head">
+        <h3>Artists With Souls (AWS)</h3>
+      </div>
+      <p class="tagline">Adversarial ML tool protecting artwork from AI scraping</p>
+      <ul>
+        <li>Built an adversarial perturbation pipeline (FGSM, PGD) on PyTorch/ResNet-50 to disrupt vision-model feature extraction while preserving visual quality</li>
+        <li>Cut processing time by over 90% by generating perturbations on downscaled 512px tensors and blending back to full resolution</li>
+        <li>Built async batch processing with Flask, Celery, and Redis, plus in-memory handling, EXIF stripping, and optional LSB watermarking</li>
+        <li>Added Grad-CAM visualization to show model attention shifting off the subject after protection</li>
+      </ul>
+      <p class="tags">PyTorch · Flask · Celery · Redis · CUDA · Torchvision</p>
+      <a class="project-link" href="https://github.com/PS12007/Artists-with-souls---AWS" target="_blank" rel="noopener">GitHub →</a>
+    </article>
+
+    <article class="project reveal">
+      <div class="entry-head">
+        <h3>SurFur</h3>
+      </div>
+      <p class="tagline">Food-surplus matching platform · Hackathon Guelph</p>
+      <ul>
+        <li>Built a matching engine ranking shelters by proximity, urgency, and capacity, with dietary-compatibility filtering</li>
+        <li>Implemented a live map, urgency alerts, and automatic re-broadcast for unclaimed listings within 90 minutes</li>
+        <li>Built a REST API and SendGrid email notifications for real-time donor-shelter coordination</li>
+      </ul>
+      <p class="tags">Next.js · TypeScript · PostgreSQL · Leaflet · SendGrid</p>
+    </article>
+
+    <article class="project reveal">
+      <div class="entry-head">
+        <h3>Silent Failure</h3>
+      </div>
+      <p class="tagline">Observability platform · in stealth</p>
+      <ul>
+        <li>Building an anomaly-detection system to surface silent degradations that standard uptime monitoring misses</li>
+        <li>Analyzing behavioral signals and cross-service logs to catch failures invisible to conventional alerts</li>
+      </ul>
+      <p class="tags">Python · Monitoring · Anomaly Detection</p>
+    </article>
+
+    <article class="project reveal">
+      <div class="entry-head">
+        <h3>Rocket Simulator</h3>
+      </div>
+      <ul>
+        <li>Real-time physics simulation of thrust, drag, gravity, and orbital motion using numerical integration</li>
+        <li>Interactive controls for live trajectory experimentation</li>
+      </ul>
+      <p class="tags">React · TypeScript</p>
+    </article>
+
+    <article class="project reveal">
+      <div class="entry-head">
+        <h3>Boredom Tracker</h3>
+      </div>
+      <ul>
+        <li>Personal analytics app tracking activity and mood to surface focus and engagement patterns</li>
+      </ul>
+      <p class="tags">React · Node.js · Data Visualization</p>
+    </article>
+  </section>
+
+  <section id="skills" class="section">
+    <p class="eyebrow reveal">Skills</p>
+
+    <div class="skill-row reveal">
+      <p class="label">Languages</p>
+      <p>Python, TypeScript, JavaScript, C, C++, MATLAB, SQL, HTML, CSS</p>
+    </div>
+    <div class="skill-row reveal">
+      <p class="label">Frameworks</p>
+      <p>React, Next.js, Node.js, Flask, Tailwind CSS, Express</p>
+    </div>
+    <div class="skill-row reveal">
+      <p class="label">AI / ML</p>
+      <p>PyTorch, OpenAI API, Computer Vision, LLMs, Prompt Engineering, Adversarial ML</p>
+    </div>
+    <div class="skill-row reveal">
+      <p class="label">Data</p>
+      <p>SQLite, PostgreSQL, Prisma, Redis</p>
+    </div>
+    <div class="skill-row reveal">
+      <p class="label">Tools</p>
+      <p>Git, Docker, Linux, Vercel, Cloudflare, CI/CD</p>
+    </div>
+  </section>
+
+  <section id="education" class="section">
+    <p class="eyebrow reveal">Education</p>
+    <article class="entry reveal">
+      <div class="entry-head">
+        <h3>Western University</h3>
+        <span class="entry-date">In Progress</span>
+      </div>
+      <p class="tagline">Mechatronic Systems Engineering — dual degree with Ivey Business School (HBA, AEO Stream)</p>
+    </article>
+  </section>
+
+  <section id="contact" class="section">
+    <p class="eyebrow reveal">Contact</p>
+    <p class="hero-bio reveal">Open to new opportunities, interesting problems, and conversations about what you're building. Links to reach me are in the top right.</p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>© 2026 Priyansh Sharma</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
