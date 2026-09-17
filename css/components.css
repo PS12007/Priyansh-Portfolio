@@ -1,0 +1,798 @@
+/* ==========================================================================
+   components.css — the pieces. Interactions here are deliberately small:
+   a rule that draws itself, a mark that steps sideways, a row that opens.
+   ========================================================================== */
+
+/* ---- navigation ---------------------------------------------------------- */
+
+.nav-link {
+  position: relative;
+  display: inline-block;
+  padding: 0.35rem 0;
+  color: var(--ink-2);
+  white-space: nowrap;
+  transition: color 320ms var(--ease);
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0.1rem;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 380ms var(--ease);
+}
+
+.nav-link:hover,
+.nav-link.is-active {
+  color: var(--ink);
+}
+
+.nav-link:hover::after,
+.nav-link.is-active::after {
+  transform: scaleX(1);
+}
+
+/* ---- external links ------------------------------------------------------ */
+
+.side-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ink-2);
+  transition: color 320ms var(--ease);
+}
+
+.side-link:hover {
+  color: var(--ink);
+}
+
+.side-link-mark {
+  font-size: 0.75em;
+  opacity: 0;
+  transform: translate(-3px, 2px);
+  transition: opacity 320ms var(--ease), transform 320ms var(--ease);
+}
+
+.side-link:hover .side-link-mark,
+.side-link:focus-visible .side-link-mark {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* ---- hero ---------------------------------------------------------------- */
+
+.hero-status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.5rem;
+}
+
+.hero-status-label {
+  padding: 0.05rem 0.4rem 0.1rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  animation: status-pulse 3.6s var(--ease) infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* A hairline that keeps dropping, under the fold of the opening screen. */
+.hero-cue {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1.5rem, 4vh, 2.6rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  transform: translateX(-50%);
+  opacity: 0;
+  animation: cue-in 1000ms 1.4s var(--ease) forwards;
+}
+
+.hero-cue-line {
+  position: relative;
+  width: 1px;
+  height: 42px;
+  overflow: hidden;
+  background: var(--rule);
+}
+
+.hero-cue-line::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 45%;
+  background: var(--ink);
+  transform: translateY(-100%);
+  animation: cue-drop 2.4s var(--ease) infinite;
+}
+
+/* The switcher already owns the bottom of a small screen, and nobody on a
+   phone needs telling to scroll. */
+@media (max-width: 880px) {
+  .hero-cue {
+    display: none;
+  }
+}
+
+@keyframes cue-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cue-drop {
+  0% {
+    transform: translateY(-100%);
+  }
+  70%,
+  100% {
+    transform: translateY(230%);
+  }
+}
+
+/* ---- entries (experience, education) ------------------------------------- */
+
+.entry + .entry {
+  margin-top: 2.5rem;
+}
+
+.entry-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.entry-role {
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+.entry-org {
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.entry-period {
+  flex: none;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.entry-notes {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+
+.entry-notes li {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: 0.92rem;
+  line-height: 1.68;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* A short rule instead of a bullet — quieter, and it lines up with the grid. */
+.entry-notes li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.78em;
+  width: 6px;
+  height: 1px;
+  background: var(--rule-strong);
+}
+
+.entry-detail {
+  margin-top: 0.55rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+
+.entry-meta {
+  margin-top: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+/* ---- awards -------------------------------------------------------------- */
+
+.awards {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--rule);
+}
+
+.awards-title {
+  margin-bottom: 1.3rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink-3);
+}
+
+.award + .award {
+  margin-top: 1.4rem;
+}
+
+.award-name {
+  font-size: 0.98rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+
+.award-note {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* ---- projects ------------------------------------------------------------ */
+
+/* Every project shows its title and a one-line summary. Opening it reveals
+   the detail, the measured numbers, and where the code lives. */
+.project {
+  border-top: 1px solid var(--rule);
+}
+
+.project:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.project-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  width: 100%;
+  padding: 1.4rem 0 0;
+  text-align: left;
+}
+
+.project-title {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.62rem;
+  line-height: 1.15;
+  letter-spacing: -0.016em;
+  transition: transform 420ms var(--ease);
+}
+
+.project-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex: none;
+  color: var(--ink-3);
+}
+
+.project-badge {
+  padding: 0.12rem 0.45rem 0.14rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  font-size: 0.6rem;
+}
+
+.project-year {
+  color: var(--ink-3);
+}
+
+.project-plus {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  transform: translateY(1px);
+  transition: transform 420ms var(--ease);
+}
+
+.project-plus::before,
+.project-plus::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  background: var(--ink-3);
+}
+
+.project-plus::before {
+  width: 9px;
+  height: 1px;
+}
+
+.project-plus::after {
+  width: 1px;
+  height: 9px;
+  transition: opacity 300ms var(--ease);
+}
+
+.project-summary {
+  max-width: 35rem;
+  padding: 0.5rem 0 1.4rem;
+  font-size: 0.95rem;
+  line-height: 1.62;
+  color: var(--ink-2);
+  text-wrap: pretty;
+  cursor: pointer;
+}
+
+/* Collapse via grid rows so the panel animates to its own height. */
+.project-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 560ms var(--ease);
+}
+
+.project-body-inner {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 420ms var(--ease);
+}
+
+.project.is-open .project-body {
+  grid-template-rows: 1fr;
+}
+
+.project.is-open .project-body-inner {
+  opacity: 1;
+  transition-delay: 90ms;
+}
+
+.project.is-open .project-plus {
+  transform: translateY(1px) rotate(90deg);
+}
+
+.project.is-open .project-plus::after {
+  opacity: 0;
+}
+
+@media (hover: hover) {
+  .project-head:hover .project-title {
+    transform: translateX(5px);
+  }
+
+  .project-head:hover .project-plus {
+    transform: translateY(1px) rotate(90deg);
+  }
+}
+
+.project-detail {
+  max-width: 35rem;
+  font-size: 0.9rem;
+  line-height: 1.72;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* The numbers. Big figures in the display face, each with the condition it
+   was measured under directly beneath it. */
+.project-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 1.3rem 1.8rem;
+  margin: 1.6rem 0 0;
+  padding-top: 1.35rem;
+  border-top: 1px solid var(--rule);
+}
+
+.stat {
+  min-width: 0;
+}
+
+.stat-value {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 2.05rem;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+  font-variant-numeric: lining-nums;
+}
+
+.stat-label {
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.project-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem 1.5rem;
+  margin-top: 1.5rem;
+  padding-bottom: 1.7rem;
+}
+
+.project-tech {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+}
+
+.project-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-bottom: 0.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--rule-strong);
+  transition: color 320ms var(--ease), border-color 320ms var(--ease);
+}
+
+.project-link:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.project-link-mark {
+  transition: transform 320ms var(--ease);
+}
+
+.project-link:hover .project-link-mark {
+  transform: translate(2px, -2px);
+}
+
+/* ---- skills -------------------------------------------------------------- */
+
+.skill-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 1.25rem;
+  padding: 0.65rem 0;
+}
+
+.skill-group {
+  color: var(--ink-3);
+  line-height: 1.9;
+}
+
+.skill-items {
+  font-size: 0.95rem;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* ---- contact ------------------------------------------------------------- */
+
+.contact-headline {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(2rem, 4.6vw, 2.8rem);
+  line-height: 1.05;
+  letter-spacing: -0.024em;
+}
+
+.contact-note {
+  max-width: 28rem;
+  margin-top: 1rem;
+  font-size: 0.98rem;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.contact-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.6rem;
+  margin-top: 2.1rem;
+}
+
+.contact-link {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 0.688rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  padding-bottom: 0.3rem;
+  transition: color 320ms var(--ease);
+}
+
+.contact-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 380ms var(--ease);
+}
+
+.contact-link:hover {
+  color: var(--ink);
+}
+
+.contact-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* ---- footer -------------------------------------------------------------- */
+
+.footer-note {
+  letter-spacing: 0.1em;
+}
+
+/* ---- background switcher ------------------------------------------------- */
+
+.switcher {
+  position: fixed;
+  right: var(--edge);
+  bottom: var(--edge);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  /* Only the controls catch the pointer; the caption is see-through. */
+  pointer-events: none;
+}
+
+.switcher-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  pointer-events: auto;
+}
+
+/* What the current background is. Surfaces after a change or on hover. */
+.switcher-caption {
+  max-width: 19rem;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  line-height: 1.6;
+  letter-spacing: 0.03em;
+  text-align: right;
+  text-wrap: balance;
+  color: var(--ink);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 480ms var(--ease), transform 480ms var(--ease);
+}
+
+.switcher.is-showing .switcher-caption {
+  opacity: 1;
+  transform: none;
+}
+
+/* Bars rather than dots: the active one simply stands taller, which reads as
+   a position along a track without needing a container to sit in. Each bar
+   is a button with a hit area far wider than the bar itself. */
+.switcher-ticks {
+  display: flex;
+  align-items: flex-end;
+  height: 16px;
+  color: var(--ink-3);
+}
+
+.switcher-tick {
+  position: relative;
+  width: 7px;
+  height: 16px;
+}
+
+.switcher-tick::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  width: 2px;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.55;
+  transition: height 380ms var(--ease), opacity 380ms var(--ease);
+}
+
+.switcher-tick:hover::before {
+  height: 7px;
+  opacity: 0.9;
+}
+
+.switcher-tick.is-active::before {
+  height: 12px;
+  opacity: 1;
+}
+
+.switcher-button {
+  display: flex;
+  align-items: center;
+  color: var(--ink-3);
+  transition: color 320ms var(--ease);
+}
+
+.switcher-button:hover,
+.switcher.is-showing .switcher-button {
+  color: var(--ink);
+}
+
+.switcher-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  /* Reserved so the hint beside it does not shuffle as modes change. */
+  min-width: 4.4rem;
+  text-align: left;
+}
+
+.switcher-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.switcher-key {
+  padding: 1px 5px 2px;
+  font-family: inherit;
+  font-size: 0.6rem;
+  line-height: 1;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+}
+
+/* ---- scroll reveal ------------------------------------------------------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 900ms var(--ease), transform 900ms var(--ease);
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* The one place a stagger earns itself: the opening screen. */
+.hero-inner.reveal > * {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 900ms var(--ease), transform 900ms var(--ease);
+}
+
+.hero-inner.reveal.is-in > * {
+  opacity: 1;
+  transform: none;
+}
+
+.hero-inner.reveal > *:nth-child(2) {
+  transition-delay: 90ms;
+}
+.hero-inner.reveal > *:nth-child(3) {
+  transition-delay: 180ms;
+}
+.hero-inner.reveal > *:nth-child(4) {
+  transition-delay: 270ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .hero-inner.reveal > * {
+    opacity: 1;
+    transform: none;
+  }
+
+  .status-dot,
+  .hero-cue-line::after {
+    animation: none;
+    opacity: 1;
+  }
+
+  .hero-cue {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* ---- narrow screens ------------------------------------------------------ */
+
+@media (max-width: 640px) {
+  .entry-head {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .project-head {
+    flex-wrap: wrap;
+    gap: 0.45rem 1rem;
+  }
+
+  .project-title {
+    flex-basis: 100%;
+    font-size: 1.42rem;
+  }
+
+  .project-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .project-plus {
+    margin-left: auto;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
+  .skill-row {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    padding: 0.8rem 0;
+  }
+
+  .switcher {
+    bottom: 1.1rem;
+    right: 1.1rem;
+  }
+
+  .switcher-caption {
+    max-width: 15rem;
+  }
+
+  /* No keyboard to press B on. */
+  .switcher-hint {
+    display: none;
+  }
+
+  .switcher-label {
+    min-width: 0;
+  }
+}

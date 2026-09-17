@@ -1,0 +1,274 @@
+/* ==========================================================================
+   layout.css — the composition. A single centred column, a small nav above
+   it that becomes a left rail on wide screens, and the external links pinned
+   to the right edge. Everything sits on one continuous background, so
+   sections are separated by space rather than by panels.
+   ========================================================================== */
+
+.main {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 0 var(--gutter) 0;
+}
+
+/* ---- masthead ------------------------------------------------------------ */
+
+.masthead {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding-top: 2rem;
+  /* Only the links themselves should catch the pointer. */
+  pointer-events: none;
+}
+
+.nav {
+  transition: opacity 190ms var(--ease);
+}
+
+/* Held at zero across the moment the layout swaps, so the change from a row
+   to a column is never seen mid-reflow. */
+.nav.is-swapping {
+  opacity: 0;
+}
+
+.nav-list {
+  display: flex;
+  gap: clamp(1.1rem, 2.4vw, 2rem);
+  pointer-events: auto;
+}
+
+/* Once the page scrolls the nav leaves the top of the screen and sits down
+   the left edge, where it stays out of the way of the reading column and
+   reads as a position indicator rather than a menu. Only on displays wide
+   enough that a left rail cannot crowd the text. */
+@media (min-width: 1000px) {
+  .masthead.is-docked {
+    top: 50%;
+    left: var(--edge);
+    right: auto;
+    justify-content: flex-start;
+    padding-top: 0;
+    transform: translateY(-50%);
+  }
+
+  .masthead.is-docked .nav-list {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+}
+
+/* Too narrow to dock: the nav belongs to the top of the page and scrolls
+   away with it, rather than floating over the text with a band behind it. */
+@media (max-width: 999px) {
+  .masthead {
+    position: absolute;
+  }
+}
+
+/* ---- external links ------------------------------------------------------ */
+
+.side-links {
+  position: fixed;
+  top: 50%;
+  right: var(--edge);
+  z-index: 20;
+  transform: translateY(-50%);
+}
+
+.side-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+/* ---- hero ---------------------------------------------------------------- */
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  /* Sits a touch above centre, which reads as more composed than dead centre. */
+  padding: 7rem 0 9rem;
+}
+
+.hero-inner {
+  text-align: center;
+  max-width: 36rem;
+}
+
+.hero-name {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(2.7rem, 6.6vw, 4.35rem);
+  letter-spacing: -0.028em;
+  line-height: 1;
+}
+
+.hero-role {
+  margin-top: 1.35rem;
+  color: var(--ink-3);
+}
+
+.hero-intro {
+  margin: 1.8rem auto 0;
+  max-width: 33rem;
+  font-size: 1.02rem;
+  line-height: 1.72;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.hero-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1.4rem;
+  margin-top: 2.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+  color: var(--ink-3);
+}
+
+/* ---- sections ------------------------------------------------------------ */
+
+.section {
+  padding-top: clamp(5.5rem, 14vh, 9rem);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  margin-bottom: 2.2rem;
+}
+
+.section-index {
+  color: var(--ink-3);
+  line-height: 1;
+}
+
+.section-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.6rem;
+  letter-spacing: -0.012em;
+  white-space: nowrap;
+}
+
+/* Hairline that runs out to the edge of the column. */
+.section-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+  transform: translateY(-0.25em);
+}
+
+/* ---- footer -------------------------------------------------------------- */
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.6rem 1.5rem;
+  margin-top: clamp(5rem, 12vh, 7.5rem);
+  padding: 2.4rem 0 3.5rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ==========================================================================
+   Narrow screens — simplify rather than compress. The nav becomes a
+   scrolling strip at the top of the page and the external links fold in
+   beneath it.
+   ========================================================================== */
+
+@media (max-width: 880px) {
+  .masthead {
+    position: relative;
+    padding-top: 1.15rem;
+    padding-bottom: 1.15rem;
+    justify-content: flex-start;
+  }
+
+  .nav {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-list {
+    justify-content: flex-start;
+    padding: 0 var(--gutter);
+    gap: 1.35rem;
+  }
+
+  /* Positioned, not static: a static element paints beneath the fixed
+     background stage, however high its z-index. */
+  .side-links {
+    position: relative;
+    top: auto;
+    right: auto;
+    transform: none;
+    padding: 0 var(--gutter);
+    margin: 0.35rem 0 0;
+  }
+
+  .side-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem 1.5rem;
+  }
+
+  .hero {
+    /* The nav and links already occupy the top of the viewport. */
+    min-height: calc(100svh - 6rem);
+    flex-direction: column;
+    justify-content: center;
+    padding: 3rem 0 6.5rem;
+  }
+
+  .hero-inner {
+    max-width: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero-intro {
+    font-size: 0.94rem;
+  }
+
+  .section-head {
+    margin-bottom: 1.9rem;
+  }
+
+  .footer {
+    flex-direction: column;
+  }
+}
