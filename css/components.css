@@ -567,257 +567,132 @@
 
 /* ---- background switcher ------------------------------------------------- */
 
-/* Tucked into the corner and deliberately quiet: small type, a swatch and
-   two arrows, no panel behind any of it, held at part opacity until the
-   pointer comes near. It carries the same halo as the rest of the type. */
+/* A single rail of dots in the corner, one per mode, each carrying that
+   mode's own colours. The live mode stretches into a short bar. Nothing
+   opens, nothing overlaps the page: at rest it is a quiet row of specks,
+   and the pointer brings it up along with the name of whatever it is over. */
 .switcher {
   position: fixed;
-  right: calc(var(--edge) - 0.35rem);
-  bottom: calc(var(--edge) - 0.5rem);
+  right: var(--edge);
+  bottom: calc(var(--edge) - 0.35rem);
   z-index: 30;
+  display: grid;
+  justify-items: end;
   font-family: var(--font-mono);
   color: var(--ink);
-  /* Only the controls catch the pointer; the caption is see-through. */
+  /* Only the dots catch the pointer; the label is see-through. */
   pointer-events: none;
 }
 
-/* The bar is the only thing in flow. The caption and the list are hung
-   above it, each anchored by its bottom edge, so a caption of a different
-   length never nudges the list under the pointer. */
-.switcher-bar {
-  position: relative;
-  display: flex;
-  align-items: center;
-  pointer-events: auto;
-  opacity: 0.56;
-  transition: opacity 420ms var(--ease);
-}
-
-.switcher:hover .switcher-bar,
-.switcher:focus-within .switcher-bar,
-.switcher.is-open .switcher-bar {
-  opacity: 1;
-}
-
-.switcher-current {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.3rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-}
-
-/* Reserved to the longest name, so the arrows never shuffle. */
-.switcher-name {
-  min-width: 6.7em;
-  text-align: left;
-}
-
-.switcher-count {
-  font-size: 0.6rem;
-  letter-spacing: 0.06em;
-  opacity: 0.55;
-  font-variant-numeric: tabular-nums;
-}
-
-.switcher-swatch {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--swatch, currentColor);
-  box-shadow: 0 0 0 1px var(--rule), 0 0 8px var(--halo-mid);
-  transition: box-shadow 320ms var(--ease);
-}
-
-.switcher-step {
+/* Hung above the rail by its bottom edge, so a longer caption grows upward
+   and never nudges the dots out from under the pointer. */
+.switcher-label {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
   display: grid;
-  place-items: center;
-  width: 1.6rem;
-  height: 2rem;
+  justify-items: end;
+  gap: 0.3rem;
+  width: max-content;
+  max-width: 18rem;
+  padding-bottom: 0.75rem;
+  text-align: right;
   opacity: 0;
-  transition: opacity 320ms var(--ease), transform 320ms var(--ease);
+  transform: translateY(4px);
+  transition: opacity 420ms var(--ease), transform 420ms var(--ease);
 }
 
-.switcher-step.is-prev {
-  transform: translateX(5px);
-}
-
-.switcher-step.is-next {
-  transform: translateX(-5px);
-}
-
-.switcher:hover .switcher-step,
-.switcher:focus-within .switcher-step,
-.switcher.is-open .switcher-step {
-  opacity: 0.6;
+.switcher.is-showing .switcher-label {
+  opacity: 1;
   transform: none;
 }
 
-.switcher .switcher-step:hover,
-.switcher .switcher-step:focus-visible {
-  opacity: 1;
+.switcher-name {
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
-.switcher-chevron {
-  width: 6px;
-  height: 6px;
-  border-top: 1px solid currentColor;
-  border-right: 1px solid currentColor;
-  transform: translateX(-1px) rotate(45deg);
-  filter: drop-shadow(0 0 2px var(--halo-core));
-}
-
-.is-prev .switcher-chevron {
-  transform: translateX(1px) rotate(-135deg);
-}
-
-/* What the background is. Surfaces after a change, on hover, and for
-   whichever mode is pointed at in the list, above which it then sits. */
 .switcher-caption {
-  position: absolute;
-  right: 1.9rem;
-  bottom: calc(100% + 0.3rem);
-  width: max-content;
-  max-width: 19rem;
   font-size: 0.64rem;
   line-height: 1.6;
   letter-spacing: 0.03em;
-  text-align: right;
   text-wrap: balance;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 480ms var(--ease), transform 480ms var(--ease), bottom 420ms var(--ease);
+  opacity: 0.78;
 }
 
-.switcher.is-open .switcher-caption {
-  bottom: calc(100% + var(--menu-h, 0px) + 0.8rem);
-}
-
-.switcher.is-showing .switcher-caption {
-  opacity: 0.92;
-  transform: none;
-}
-
-/* The full list, opening upward from the name. Columns are fixed widths,
-   so indices, names and swatches line up without a table. */
-.switcher-menu {
-  position: absolute;
-  right: 1.6rem;
-  bottom: calc(100% + 0.2rem);
-  display: grid;
-  justify-items: end;
-  max-height: calc(100vh - 7rem);
-  overflow-y: auto;
-  scrollbar-width: none;
-  visibility: hidden;
-  pointer-events: none;
-  transition: visibility 0s linear 360ms;
-}
-
-.switcher.is-open .switcher-menu {
-  visibility: visible;
-  pointer-events: auto;
-  transition-delay: 0s;
-}
-
-.switcher-option {
-  display: grid;
-  grid-template-columns: 1.3rem 6.7em 8px;
+.switcher-rail {
+  display: flex;
   align-items: center;
-  column-gap: 0.6rem;
-  padding: 0.26rem 0.3rem;
-  font-size: 0.66rem;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  text-align: left;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 240ms var(--ease), transform 360ms var(--ease);
+  gap: 7px;
+  pointer-events: auto;
+  opacity: 0.5;
+  transition: opacity 420ms var(--ease);
 }
 
-/* Opens from the bottom up: the nearest entries arrive first. */
-.switcher.is-open .switcher-option {
-  opacity: 0.55;
-  transform: none;
-  transition-delay: calc(var(--d, 0) * 16ms);
-}
-
-.switcher.is-open .switcher-option:hover,
-.switcher.is-open .switcher-option:focus-visible,
-.switcher.is-open .switcher-option[aria-checked='true'] {
+.switcher:hover .switcher-rail,
+.switcher:focus-within .switcher-rail {
   opacity: 1;
 }
 
-.switcher-option-index {
-  font-size: 0.56rem;
-  letter-spacing: 0.06em;
-  opacity: 0.6;
-  font-variant-numeric: tabular-nums;
+/* Each dot is the mode in miniature. The hit area is the whole square; the
+   speck inside it is drawn by ::after, which is what grows and stretches. */
+.switcher-dot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 11px;
+  height: 20px;
+  transition: width 420ms var(--ease);
 }
 
-/* The live mode's swatch wears a ring, like a selected radio. */
-.switcher-option[aria-checked='true'] .switcher-swatch {
-  box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 3px var(--ink);
+.switcher-dot::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--swatch, currentColor);
+  box-shadow: 0 0 0 1px var(--rule), 0 0 8px var(--halo-mid);
+  transition: width 420ms var(--ease), height 260ms var(--ease), box-shadow 260ms var(--ease);
 }
 
-.switcher-hint {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-top: 0.55rem;
-  padding: 0 0.3rem;
-  font-size: 0.56rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  opacity: 0;
-  transition: opacity 240ms var(--ease);
+.switcher-dot:hover::after,
+.switcher-dot:focus-visible::after {
+  height: 9px;
 }
 
-.switcher.is-open .switcher-hint {
-  opacity: 0.55;
-  transition-delay: 200ms;
+/* The live mode: a bar rather than a dot, which is the only state the rail
+   needs to spell out. The extra width comes off its own cell, so the row
+   stays put as it moves along. */
+.switcher-dot[aria-checked='true'] {
+  width: 22px;
 }
 
-.switcher-hint span + .switcher-key {
-  margin-left: 0.45rem;
+.switcher-dot[aria-checked='true']::after {
+  width: 18px;
+  height: 7px;
+  box-shadow: 0 0 0 1px var(--rule-strong), 0 0 12px var(--halo-mid);
 }
 
-.switcher-key {
-  padding: 1px 4px 2px;
-  font-family: inherit;
-  font-size: 0.56rem;
-  line-height: 1;
-  border: 1px solid var(--rule-strong);
-  border-radius: 2px;
+.switcher-dot:focus-visible {
+  outline: none;
 }
 
-/* The list opens over the column of external links on the right edge;
-   they step aside until it closes. */
-@media (min-width: 881px) {
-  .side-links {
-    transition: opacity 320ms var(--ease), visibility 0s linear 0s;
-  }
-
-  .is-choosing-background .side-links {
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 240ms var(--ease), visibility 0s linear 240ms;
-  }
+.switcher-dot:focus-visible::after {
+  box-shadow: 0 0 0 1px var(--bg-base), 0 0 0 2px var(--ink);
 }
 
-/* No hover on a touchscreen: the arrows stay in view, and the keyboard
-   hint has nothing to say. */
+/* No hover on a touchscreen, so the rail stays legible on its own. */
 @media (hover: none) {
-  .switcher-step {
-    opacity: 0.6;
-    transform: none;
+  .switcher-rail {
+    gap: 4px;
+    opacity: 0.8;
   }
 
-  .switcher-hint {
-    display: none;
+  /* Fingers need more to aim at than a pointer does. */
+  .switcher-dot {
+    width: 15px;
+    height: 26px;
   }
 }
 
@@ -913,19 +788,15 @@
   }
 
   .switcher {
-    right: 0.55rem;
-    bottom: 0.45rem;
+    right: 0.7rem;
+    bottom: 0.5rem;
   }
 
-  .switcher-caption {
-    max-width: 15rem;
+  .switcher-label {
+    max-width: 14rem;
   }
 
-  .switcher-name {
-    min-width: 0;
-  }
-
-  .switcher-option {
-    grid-template-columns: 1.3rem auto 8px;
+  .switcher-rail {
+    gap: 5px;
   }
 }

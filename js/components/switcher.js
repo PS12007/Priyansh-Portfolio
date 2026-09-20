@@ -1,210 +1,140 @@
 /* The background switcher.
-   A small, quiet control in the bottom-right corner: a swatch, the current
-   mode's name and its place in the cycle, with arrows either side. At rest
-   it sits back at part opacity; hovering brings it forward, along with a
-   line saying what the background actually is. Clicking the name opens the
-   full list, each mode with its own swatch, and pointing at one previews
-   its description before you commit. B and Shift+B cycle from anywhere. */
+   One rail of dots in the bottom-right corner, one per mode, each tinted
+   with that mode's own colours; the live one stretches into a short bar.
+   There is no panel and no open state — every mode is one click away at all
+   times. Pointing at a dot names the mode and says what it is, just above
+   the rail; the label fades back out on its own. B and Shift+B cycle from
+   anywhere. */
 window.PF = window.PF || {};
 
 (function (PF) {
   'use strict';
 
   var el = PF.util.el;
-  var CAPTION_HOLD_MS = 4200;
-
-  function pad2(n) {
-    return n < 10 ? '0' + n : String(n);
-  }
-
-  function chevron(dir) {
-    return el('button.switcher-step.is-' + dir, {
-      type: 'button',
-      'aria-label': dir === 'prev' ? 'Previous background' : 'Next background',
-    }, el('span.switcher-chevron', { 'aria-hidden': 'true' }));
-  }
+  var LABEL_HOLD_MS = 3600;
 
   PF.initSwitcher = function (mount) {
     var modes = PF.bg.list();
     if (modes.length < 2) return;
 
-    var caption = el('p.switcher-caption', { 'aria-hidden': 'true' });
-    var swatch = el('span.switcher-swatch', { 'aria-hidden': 'true' });
     var name = el('span.switcher-name');
-    var count = el('span.switcher-count', { 'aria-hidden': 'true' });
-    var current = el('button.switcher-current', {
-      type: 'button',
-      'aria-haspopup': 'true',
-      'aria-expanded': 'false',
-      'aria-controls': 'switcher-menu',
-    }, [swatch, name, count]);
-    var prev = chevron('prev');
-    var next = chevron('next');
+    var caption = el('span.switcher-caption');
+    var label = el('div.switcher-label', { 'aria-hidden': 'true' }, [name, caption]);
 
-    var options = modes.map(function (mode, i) {
-      var option = el('button.switcher-option', {
+    var rail = el('div.switcher-rail', { role: 'radiogroup', 'aria-label': 'Background' });
+    var dots = modes.map(function (mode) {
+      var dot = el('button.switcher-dot', {
         type: 'button',
-        role: 'menuitemradio',
+        role: 'radio',
         'aria-checked': 'false',
+        'aria-label': mode.label,
+        tabindex: '-1',
         'data-mode': mode.id,
-        style: '--d: ' + (modes.length - 1 - i),
-      }, [
-        el('span.switcher-option-index', { 'aria-hidden': 'true', text: pad2(i + 1) }),
-        el('span.switcher-option-name', { text: mode.label }),
-        el('span.switcher-swatch', { 'aria-hidden': 'true', style: '--swatch: ' + (mode.swatch || 'currentColor') }),
-      ]);
-      option.addEventListener('click', function () {
+        style: '--swatch: ' + (mode.swatch || 'currentColor'),
+      });
+      dot.addEventListener('click', function () {
         PF.bg.set(mode.id);
       });
-      option.addEventListener('pointerenter', function () {
-        preview(mode);
+      dot.addEventListener('pointerenter', function (e) {
+        if (e.pointerType === 'touch') return;
+        show(mode, false);
       });
-      option.addEventListener('focus', function () {
-        preview(mode);
-      });
-      return option;
+      rail.appendChild(dot);
+      return dot;
     });
 
-    // The shortcut is the real control; the buttons are for people who
-    // never find it. Hidden where there is no keyboard.
-    var hint = el('p.switcher-hint', { 'aria-hidden': 'true' }, [
-      el('kbd.switcher-key', { text: 'B' }),
-      el('span', { text: 'next' }),
-      el('kbd.switcher-key', { text: '⇧B' }),
-      el('span', { text: 'back' }),
-    ]);
-
-    var menu = el('div.switcher-menu', { id: 'switcher-menu', role: 'menu', 'aria-label': 'Backgrounds' }, options.concat([hint]));
-    var bar = el('div.switcher-bar', null, [prev, current, next]);
-
     // Screen readers get the mode name and what it is; sighted users get the
-    // label and the caption.
+    // label above the rail.
     var live = el('span.visually-hidden', { role: 'status', 'aria-live': 'polite' });
 
-    var node = el('div.switcher', null, [menu, caption, bar, live]);
+    var node = el('div.switcher', null, [label, rail, live]);
     mount.appendChild(node);
 
     var holdTimer = null;
     var hovering = false;
-    var open = false;
     var active = PF.bg.current();
 
-    function showCaption(temporary) {
+    /* The label shows whichever mode is being pointed at, and falls back to
+       the live one. `temporary` lets it retire itself after a change made
+       from the keyboard, where there is no pointer to leave. */
+    function show(mode, temporary) {
+      name.textContent = mode.label;
+      caption.textContent = mode.caption || '';
       node.classList.add('is-showing');
       clearTimeout(holdTimer);
       if (temporary) {
         holdTimer = setTimeout(function () {
-          if (!hovering && !open) node.classList.remove('is-showing');
-        }, CAPTION_HOLD_MS);
+          if (!hovering) node.classList.remove('is-showing');
+        }, LABEL_HOLD_MS);
       }
     }
 
-    function preview(mode) {
-      caption.textContent = mode.caption || '';
-      showCaption(false);
+    function hide() {
+      clearTimeout(holdTimer);
+      node.classList.remove('is-showing');
     }
 
-    function restoreCaption() {
-      if (active) caption.textContent = active.caption || '';
-    }
-
-    function setOpen(value, focusActive) {
-      open = value;
-      // The caption moves up to sit above the list while it is open.
-      if (open) node.style.setProperty('--menu-h', menu.offsetHeight + 'px');
-      node.classList.toggle('is-open', open);
-      document.documentElement.classList.toggle('is-choosing-background', open);
-      current.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if (open) {
-        showCaption(false);
-        if (focusActive) {
-          var on = menu.querySelector('[aria-checked="true"]') || options[0];
-          on.focus();
-        }
+    /* Back to the live mode, or out of the way entirely once both the
+       pointer and focus have left the corner. */
+    function restore() {
+      if (hovering || node.contains(document.activeElement)) {
+        if (active) show(active, false);
       } else {
-        restoreCaption();
-        showCaption(true);
+        hide();
       }
     }
 
     function sync(spec) {
       active = spec;
-      var index = 0;
-      for (var i = 0; i < modes.length; i++) if (modes[i].id === spec.id) index = i;
-      name.textContent = spec.label;
-      count.textContent = pad2(index + 1) + '/' + pad2(modes.length);
-      swatch.style.setProperty('--swatch', modes[index].swatch || 'currentColor');
-      caption.textContent = spec.caption || '';
-      live.textContent = 'Background: ' + spec.label + (spec.caption ? '. ' + spec.caption : '');
-      for (i = 0; i < options.length; i++) {
-        options[i].setAttribute('aria-checked', options[i].getAttribute('data-mode') === spec.id ? 'true' : 'false');
+      for (var i = 0; i < dots.length; i++) {
+        var on = dots[i].getAttribute('data-mode') === spec.id;
+        dots[i].setAttribute('aria-checked', on ? 'true' : 'false');
+        // Roving tabindex: the rail is one stop, and the live mode is it.
+        dots[i].setAttribute('tabindex', on ? '0' : '-1');
       }
+      live.textContent = 'Background: ' + spec.label + (spec.caption ? '. ' + spec.caption : '');
     }
 
     PF.bg.onChange(function (spec) {
       sync(spec);
-      showCaption(true);
+      show(spec, true);
     });
 
-    current.addEventListener('click', function (e) {
-      // A keyboard press lands focus in the list; a click leaves it be.
-      setOpen(!open, e.detail === 0);
-    });
-    prev.addEventListener('click', function () {
-      PF.bg.cycle(-1);
-    });
-    next.addEventListener('click', function () {
-      PF.bg.cycle(1);
-    });
-
-    menu.addEventListener('pointerleave', restoreCaption);
-    menu.addEventListener('focusout', function (e) {
-      if (!menu.contains(e.relatedTarget)) restoreCaption();
-    });
-
-    // Arrow keys walk the list; Escape closes it and hands focus back.
-    menu.addEventListener('keydown', function (e) {
-      var at = options.indexOf(document.activeElement);
+    // Arrow keys walk the rail and switch as they go, the way a radio group
+    // behaves; Home and End jump to the ends.
+    rail.addEventListener('keydown', function (e) {
+      var at = dots.indexOf(document.activeElement);
+      if (at < 0) return;
       var to = -1;
-      if (e.key === 'ArrowDown') to = (at + 1) % options.length;
-      else if (e.key === 'ArrowUp') to = (at - 1 + options.length) % options.length;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') to = (at + 1) % dots.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') to = (at - 1 + dots.length) % dots.length;
       else if (e.key === 'Home') to = 0;
-      else if (e.key === 'End') to = options.length - 1;
-      if (to >= 0) {
-        e.preventDefault();
-        options[to].focus();
-      }
+      else if (e.key === 'End') to = dots.length - 1;
+      if (to < 0) return;
+      e.preventDefault();
+      PF.bg.set(modes[to].id);
+      dots[to].focus();
     });
 
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && open) {
-        setOpen(false);
-        current.focus();
-      }
+    rail.addEventListener('focusin', function (e) {
+      var at = dots.indexOf(e.target);
+      if (at >= 0) show(modes[at], false);
     });
 
-    // Anywhere else on the page closes the list.
-    document.addEventListener('pointerdown', function (e) {
-      if (open && !node.contains(e.target)) setOpen(false);
-    });
+    // Off a dot but still in the corner: back to naming the live mode.
+    rail.addEventListener('pointerleave', restore);
 
     node.addEventListener('pointerenter', function (e) {
       if (e.pointerType === 'touch') return;
       hovering = true;
-      showCaption(false);
+      restore();
     });
     node.addEventListener('pointerleave', function () {
       hovering = false;
-      if (!open) showCaption(true);
-    });
-    node.addEventListener('focusin', function () {
-      showCaption(false);
+      restore();
     });
     node.addEventListener('focusout', function (e) {
-      if (!node.contains(e.relatedTarget)) {
-        if (open) setOpen(false);
-        showCaption(true);
-      }
+      if (!node.contains(e.relatedTarget)) restore();
     });
 
     document.addEventListener('keydown', function (e) {
@@ -221,12 +151,14 @@ window.PF = window.PF || {};
 
     if (active) {
       sync(active);
+      name.textContent = active.label;
+      caption.textContent = active.caption || '';
       // Introduce the opening background once, a moment after the page has
       // settled, so a first-time visitor learns what they are looking at.
       // Not on a phone, where the corner it appears in is also the text.
       if (!window.matchMedia('(max-width: 640px)').matches) {
         setTimeout(function () {
-          showCaption(true);
+          show(active, true);
         }, 1400);
       }
     }
