@@ -567,10 +567,10 @@
 
 /* ---- background switcher ------------------------------------------------- */
 
-/* A single rail of dots in the corner, one per mode, each carrying that
-   mode's own colours. The live mode stretches into a short bar. Nothing
-   opens, nothing overlaps the page: at rest it is a quiet row of specks,
-   and the pointer brings it up along with the name of whatever it is over. */
+/* A single rail of hairline ticks in the corner, one per mode, rising from
+   a shared baseline like the marks on a gauge. Nothing opens, nothing
+   overlaps the page: at rest it is a faint row of strokes, and the pointer
+   brings it up along with the name of whatever it is over. */
 .switcher {
   position: fixed;
   right: var(--edge);
@@ -580,12 +580,12 @@
   justify-items: end;
   font-family: var(--font-mono);
   color: var(--ink);
-  /* Only the dots catch the pointer; the label is see-through. */
+  /* Only the ticks catch the pointer; the label is see-through. */
   pointer-events: none;
 }
 
 /* Hung above the rail by its bottom edge, so a longer caption grows upward
-   and never nudges the dots out from under the pointer. */
+   and never nudges the ticks out from under the pointer. */
 .switcher-label {
   position: absolute;
   right: 0;
@@ -595,7 +595,7 @@
   gap: 0.3rem;
   width: max-content;
   max-width: 18rem;
-  padding-bottom: 0.75rem;
+  padding-bottom: 0.8rem;
   text-align: right;
   opacity: 0;
   transform: translateY(4px);
@@ -621,78 +621,72 @@
   opacity: 0.78;
 }
 
+/* Bottom-aligned, so every tick shares one baseline and only grows upward.
+   The halo is the same one the type carries, which is what keeps a 2px
+   stroke readable over the artwork without drawing a box around it. */
 .switcher-rail {
   display: flex;
-  align-items: center;
-  gap: 7px;
+  align-items: flex-end;
+  gap: 8px;
   pointer-events: auto;
-  opacity: 0.5;
-  transition: opacity 420ms var(--ease);
+  filter: drop-shadow(0 0 2px var(--halo-core)) drop-shadow(0 0 6px var(--halo-mid));
 }
 
-.switcher:hover .switcher-rail,
-.switcher:focus-within .switcher-rail {
+/* The hit area is the whole cell; the stroke inside it is drawn by ::after,
+   and is the only thing that moves. Every cell keeps its width, so the rail
+   never reflows as the live mode travels along it. */
+.switcher-tick {
+  display: grid;
+  place-items: end center;
+  width: 10px;
+  height: 22px;
+}
+
+.switcher-tick::after {
+  content: '';
+  width: 2px;
+  height: 8px;
+  background: currentColor;
+  opacity: 0.32;
+  transition: height 420ms var(--ease), opacity 420ms var(--ease);
+}
+
+.switcher-tick:hover::after,
+.switcher-tick:focus-visible::after {
+  height: 13px;
+  opacity: 0.75;
+}
+
+/* The live mode stands tallest and at full strength. It is drawn in ink
+   rather than the mode's own colours, which are pastels on several of the
+   backgrounds and read as a smudge at this width. */
+.switcher-tick[aria-checked='true']::after {
+  height: 18px;
   opacity: 1;
 }
 
-/* Each dot is the mode in miniature. The hit area is the whole square; the
-   speck inside it is drawn by ::after, which is what grows and stretches. */
-.switcher-dot {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 11px;
-  height: 20px;
-  transition: width 420ms var(--ease);
-}
-
-.switcher-dot::after {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--swatch, currentColor);
-  box-shadow: 0 0 0 1px var(--rule), 0 0 8px var(--halo-mid);
-  transition: width 420ms var(--ease), height 260ms var(--ease), box-shadow 260ms var(--ease);
-}
-
-.switcher-dot:hover::after,
-.switcher-dot:focus-visible::after {
-  height: 9px;
-}
-
-/* The live mode: a bar rather than a dot, which is the only state the rail
-   needs to spell out. The extra width comes off its own cell, so the row
-   stays put as it moves along. */
-.switcher-dot[aria-checked='true'] {
-  width: 22px;
-}
-
-.switcher-dot[aria-checked='true']::after {
-  width: 18px;
-  height: 7px;
-  box-shadow: 0 0 0 1px var(--rule-strong), 0 0 12px var(--halo-mid);
-}
-
-.switcher-dot:focus-visible {
+.switcher-tick:focus-visible {
   outline: none;
 }
 
-.switcher-dot:focus-visible::after {
+.switcher-tick:focus-visible::after {
   box-shadow: 0 0 0 1px var(--bg-base), 0 0 0 2px var(--ink);
 }
 
-/* No hover on a touchscreen, so the rail stays legible on its own. */
+/* No hover on a touchscreen, so the rail stays legible on its own, and
+   fingers need more to aim at than a pointer does. */
 @media (hover: none) {
   .switcher-rail {
-    gap: 4px;
-    opacity: 0.8;
+    gap: 6px;
   }
 
-  /* Fingers need more to aim at than a pointer does. */
-  .switcher-dot {
-    width: 15px;
+  .switcher-tick {
+    width: 14px;
     height: 26px;
+  }
+
+  .switcher-tick::after {
+    opacity: 0.55;
   }
 }
 
@@ -797,6 +791,6 @@
   }
 
   .switcher-rail {
-    gap: 5px;
+    gap: 7px;
   }
 }

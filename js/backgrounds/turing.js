@@ -202,7 +202,6 @@ window.PF = window.PF || {};
     id: 'turing',
     label: 'Turing',
     caption: 'Gray–Scott reaction–diffusion, growing as you watch.',
-    swatch: 'radial-gradient(circle at 30% 30%, #ffd0a0, #ffacc8 40%, #a4c2ff 75%)',
     theme: 'light',
     base: 'rgb(252, 250, 245)',
     Ctor: Turing,

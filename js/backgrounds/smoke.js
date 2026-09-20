@@ -634,7 +634,6 @@ window.PF = window.PF || {};
     id: 'smoke',
     label: 'Smoke',
     caption: 'Navier–Stokes, solved on your GPU: warm smoke rises and rolls up into vortices. Move the cursor to stir the air.',
-    swatch: 'conic-gradient(from 200deg, #1a84ff, #ff2a82, #ff7a1a, #1a84ff)',
     theme: 'dark',
     base: BASE,
     requires: 'webgl-float',

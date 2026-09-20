@@ -680,7 +680,6 @@ window.PF = window.PF || {};
     id: 'snake',
     label: 'Snake',
     caption: 'Four agents playing Snake: BFS to food, flood fill to stay alive. Move the cursor to drop food.',
-    swatch: 'linear-gradient(135deg, #6ee7b7 50%, #fda4af 50%)',
     theme: 'dark',
     base: BOARD,
     Ctor: Snake,

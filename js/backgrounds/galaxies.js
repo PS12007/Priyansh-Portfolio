@@ -819,7 +819,6 @@ window.PF = window.PF || {};
     id: 'galaxies',
     label: 'Galaxies',
     caption: 'Two galaxies colliding. Each star feels only the two dark halos, and that alone flings out the tidal tails. Move the cursor to turn the view.',
-    swatch: 'radial-gradient(circle at 42% 45%, #fff 6%, #ffd79a 18%, #6d8cff 46%, #10142a 72%)',
     theme: 'dark',
     base: BASE,
     requires: 'webgl',

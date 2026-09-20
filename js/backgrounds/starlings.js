@@ -816,7 +816,6 @@ window.PF = window.PF || {};
     id: 'starlings',
     label: 'Starlings',
     caption: 'A murmuration: thousands of birds, each watching only its nearest neighbours, and no leader. Your cursor is the falcon.',
-    swatch: 'radial-gradient(circle at 58% 42%, #262230 16%, transparent 19%), linear-gradient(180deg, #b2c1d5, #f4d6c2)',
     theme: 'light',
     base: BASE,
     requires: 'webgl',

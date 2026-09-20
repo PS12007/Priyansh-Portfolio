@@ -1,10 +1,9 @@
 /* The background switcher.
-   One rail of dots in the bottom-right corner, one per mode, each tinted
-   with that mode's own colours; the live one stretches into a short bar.
-   There is no panel and no open state — every mode is one click away at all
-   times. Pointing at a dot names the mode and says what it is, just above
-   the rail; the label fades back out on its own. B and Shift+B cycle from
-   anywhere. */
+   One rail of hairline ticks in the bottom-right corner, one per mode,
+   rising from a shared baseline; the live one stands tallest. There is no
+   panel and no open state — every mode is one click away at all times. Pointing at a tick
+   names the mode and says what it is, just above the rail; the label fades
+   back out on its own. B and Shift+B cycle from anywhere. */
 window.PF = window.PF || {};
 
 (function (PF) {
@@ -22,25 +21,24 @@ window.PF = window.PF || {};
     var label = el('div.switcher-label', { 'aria-hidden': 'true' }, [name, caption]);
 
     var rail = el('div.switcher-rail', { role: 'radiogroup', 'aria-label': 'Background' });
-    var dots = modes.map(function (mode) {
-      var dot = el('button.switcher-dot', {
+    var ticks = modes.map(function (mode) {
+      var tick = el('button.switcher-tick', {
         type: 'button',
         role: 'radio',
         'aria-checked': 'false',
         'aria-label': mode.label,
         tabindex: '-1',
         'data-mode': mode.id,
-        style: '--swatch: ' + (mode.swatch || 'currentColor'),
       });
-      dot.addEventListener('click', function () {
+      tick.addEventListener('click', function () {
         PF.bg.set(mode.id);
       });
-      dot.addEventListener('pointerenter', function (e) {
+      tick.addEventListener('pointerenter', function (e) {
         if (e.pointerType === 'touch') return;
         show(mode, false);
       });
-      rail.appendChild(dot);
-      return dot;
+      rail.appendChild(tick);
+      return tick;
     });
 
     // Screen readers get the mode name and what it is; sighted users get the
@@ -86,11 +84,11 @@ window.PF = window.PF || {};
 
     function sync(spec) {
       active = spec;
-      for (var i = 0; i < dots.length; i++) {
-        var on = dots[i].getAttribute('data-mode') === spec.id;
-        dots[i].setAttribute('aria-checked', on ? 'true' : 'false');
+      for (var i = 0; i < ticks.length; i++) {
+        var on = ticks[i].getAttribute('data-mode') === spec.id;
+        ticks[i].setAttribute('aria-checked', on ? 'true' : 'false');
         // Roving tabindex: the rail is one stop, and the live mode is it.
-        dots[i].setAttribute('tabindex', on ? '0' : '-1');
+        ticks[i].setAttribute('tabindex', on ? '0' : '-1');
       }
       live.textContent = 'Background: ' + spec.label + (spec.caption ? '. ' + spec.caption : '');
     }
@@ -103,25 +101,25 @@ window.PF = window.PF || {};
     // Arrow keys walk the rail and switch as they go, the way a radio group
     // behaves; Home and End jump to the ends.
     rail.addEventListener('keydown', function (e) {
-      var at = dots.indexOf(document.activeElement);
+      var at = ticks.indexOf(document.activeElement);
       if (at < 0) return;
       var to = -1;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') to = (at + 1) % dots.length;
-      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') to = (at - 1 + dots.length) % dots.length;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') to = (at + 1) % ticks.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') to = (at - 1 + ticks.length) % ticks.length;
       else if (e.key === 'Home') to = 0;
-      else if (e.key === 'End') to = dots.length - 1;
+      else if (e.key === 'End') to = ticks.length - 1;
       if (to < 0) return;
       e.preventDefault();
       PF.bg.set(modes[to].id);
-      dots[to].focus();
+      ticks[to].focus();
     });
 
     rail.addEventListener('focusin', function (e) {
-      var at = dots.indexOf(e.target);
+      var at = ticks.indexOf(e.target);
       if (at >= 0) show(modes[at], false);
     });
 
-    // Off a dot but still in the corner: back to naming the live mode.
+    // Off a tick but still in the corner: back to naming the live mode.
     rail.addEventListener('pointerleave', restore);
 
     node.addEventListener('pointerenter', function (e) {

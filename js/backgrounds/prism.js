@@ -245,7 +245,6 @@ window.PF = window.PF || {};
     id: 'prism',
     label: 'Prism',
     caption: 'Thin-film interference: the colours on a soap bubble, from the physics. Move the cursor to tilt it.',
-    swatch: 'conic-gradient(from 90deg, #f5c6dd, #fbe3b8, #cdeccd, #bfdcff, #e2c9f5, #f5c6dd)',
     theme: 'light',
     base: BASE,
     requires: 'webgl',

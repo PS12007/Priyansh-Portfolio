@@ -48,7 +48,7 @@ window.PF = window.PF || {};
   function list() {
     return available().map(function (id) {
       var spec = specFor(id);
-      return { id: spec.id, label: spec.label, theme: spec.theme, caption: spec.caption, swatch: spec.swatch };
+      return { id: spec.id, label: spec.label, theme: spec.theme, caption: spec.caption };
     });
   }
 

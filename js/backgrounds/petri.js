@@ -480,7 +480,6 @@ window.PF = window.PF || {};
     id: 'petri',
     label: 'Petri',
     caption: 'Particle life: six species, one table of who chases whom. Stir it with the cursor.',
-    swatch: 'conic-gradient(#50d6ff, #ff5cc4, #a8ff68, #ffba48, #967cff, #50d6ff)',
     theme: 'dark',
     base: BASE,
     Ctor: Petri,

@@ -310,7 +310,6 @@ window.PF = window.PF || {};
     id: 'horizon',
     label: 'Horizon',
     caption: 'A black hole, ray-traced. Every pixel is a light ray bent by gravity.',
-    swatch: 'radial-gradient(circle, #000 34%, #ffc27a 40%, #d4561a 62%, #3a1206 78%)',
     theme: 'dark',
     base: BASE,
     requires: 'webgl',
