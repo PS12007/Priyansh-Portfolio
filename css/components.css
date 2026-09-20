@@ -567,124 +567,258 @@
 
 /* ---- background switcher ------------------------------------------------- */
 
+/* Tucked into the corner and deliberately quiet: small type, a swatch and
+   two arrows, no panel behind any of it, held at part opacity until the
+   pointer comes near. It carries the same halo as the rest of the type. */
 .switcher {
   position: fixed;
-  right: var(--edge);
-  bottom: var(--edge);
+  right: calc(var(--edge) - 0.35rem);
+  bottom: calc(var(--edge) - 0.5rem);
   z-index: 30;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--ink);
   /* Only the controls catch the pointer; the caption is see-through. */
   pointer-events: none;
 }
 
-.switcher-row {
+/* The bar is the only thing in flow. The caption and the list are hung
+   above it, each anchored by its bottom edge, so a caption of a different
+   length never nudges the list under the pointer. */
+.switcher-bar {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
   pointer-events: auto;
+  opacity: 0.56;
+  transition: opacity 420ms var(--ease);
 }
 
-/* What the current background is. Surfaces after a change or on hover. */
+.switcher:hover .switcher-bar,
+.switcher:focus-within .switcher-bar,
+.switcher.is-open .switcher-bar {
+  opacity: 1;
+}
+
+.switcher-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.3rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+/* Reserved to the longest name, so the arrows never shuffle. */
+.switcher-name {
+  min-width: 6.7em;
+  text-align: left;
+}
+
+.switcher-count {
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+}
+
+.switcher-swatch {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--swatch, currentColor);
+  box-shadow: 0 0 0 1px var(--rule), 0 0 8px var(--halo-mid);
+  transition: box-shadow 320ms var(--ease);
+}
+
+.switcher-step {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 2rem;
+  opacity: 0;
+  transition: opacity 320ms var(--ease), transform 320ms var(--ease);
+}
+
+.switcher-step.is-prev {
+  transform: translateX(5px);
+}
+
+.switcher-step.is-next {
+  transform: translateX(-5px);
+}
+
+.switcher:hover .switcher-step,
+.switcher:focus-within .switcher-step,
+.switcher.is-open .switcher-step {
+  opacity: 0.6;
+  transform: none;
+}
+
+.switcher .switcher-step:hover,
+.switcher .switcher-step:focus-visible {
+  opacity: 1;
+}
+
+.switcher-chevron {
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  transform: translateX(-1px) rotate(45deg);
+  filter: drop-shadow(0 0 2px var(--halo-core));
+}
+
+.is-prev .switcher-chevron {
+  transform: translateX(1px) rotate(-135deg);
+}
+
+/* What the background is. Surfaces after a change, on hover, and for
+   whichever mode is pointed at in the list, above which it then sits. */
 .switcher-caption {
+  position: absolute;
+  right: 1.9rem;
+  bottom: calc(100% + 0.3rem);
+  width: max-content;
   max-width: 19rem;
-  font-family: var(--font-mono);
   font-size: 0.64rem;
   line-height: 1.6;
   letter-spacing: 0.03em;
   text-align: right;
   text-wrap: balance;
-  color: var(--ink);
   opacity: 0;
   transform: translateY(4px);
-  transition: opacity 480ms var(--ease), transform 480ms var(--ease);
+  transition: opacity 480ms var(--ease), transform 480ms var(--ease), bottom 420ms var(--ease);
+}
+
+.switcher.is-open .switcher-caption {
+  bottom: calc(100% + var(--menu-h, 0px) + 0.8rem);
 }
 
 .switcher.is-showing .switcher-caption {
-  opacity: 1;
+  opacity: 0.92;
   transform: none;
 }
 
-/* Bars rather than dots: the active one simply stands taller, which reads as
-   a position along a track without needing a container to sit in. Each bar
-   is a button with a hit area far wider than the bar itself. */
-.switcher-ticks {
-  display: flex;
-  align-items: flex-end;
-  height: 16px;
-  color: var(--ink-3);
-}
-
-.switcher-tick {
-  position: relative;
-  width: 7px;
-  height: 16px;
-}
-
-.switcher-tick::before {
-  content: '';
+/* The full list, opening upward from the name. Columns are fixed widths,
+   so indices, names and swatches line up without a table. */
+.switcher-menu {
   position: absolute;
-  left: 2px;
-  bottom: 2px;
-  width: 2px;
-  height: 3px;
-  background: currentColor;
+  right: 1.6rem;
+  bottom: calc(100% + 0.2rem);
+  display: grid;
+  justify-items: end;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  scrollbar-width: none;
+  visibility: hidden;
+  pointer-events: none;
+  transition: visibility 0s linear 360ms;
+}
+
+.switcher.is-open .switcher-menu {
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.switcher-option {
+  display: grid;
+  grid-template-columns: 1.3rem 6.7em 8px;
+  align-items: center;
+  column-gap: 0.6rem;
+  padding: 0.26rem 0.3rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 240ms var(--ease), transform 360ms var(--ease);
+}
+
+/* Opens from the bottom up: the nearest entries arrive first. */
+.switcher.is-open .switcher-option {
   opacity: 0.55;
-  transition: height 380ms var(--ease), opacity 380ms var(--ease);
+  transform: none;
+  transition-delay: calc(var(--d, 0) * 16ms);
 }
 
-.switcher-tick:hover::before {
-  height: 7px;
-  opacity: 0.9;
-}
-
-.switcher-tick.is-active::before {
-  height: 12px;
+.switcher.is-open .switcher-option:hover,
+.switcher.is-open .switcher-option:focus-visible,
+.switcher.is-open .switcher-option[aria-checked='true'] {
   opacity: 1;
 }
 
-.switcher-button {
-  display: flex;
-  align-items: center;
-  color: var(--ink-3);
-  transition: color 320ms var(--ease);
+.switcher-option-index {
+  font-size: 0.56rem;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
 }
 
-.switcher-button:hover,
-.switcher.is-showing .switcher-button {
-  color: var(--ink);
-}
-
-.switcher-label {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  /* Reserved so the hint beside it does not shuffle as modes change. */
-  min-width: 4.4rem;
-  text-align: left;
+/* The live mode's swatch wears a ring, like a selected radio. */
+.switcher-option[aria-checked='true'] .switcher-swatch {
+  box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 3px var(--ink);
 }
 
 .switcher-hint {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.11em;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+  padding: 0 0.3rem;
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  opacity: 0;
+  transition: opacity 240ms var(--ease);
+}
+
+.switcher.is-open .switcher-hint {
+  opacity: 0.55;
+  transition-delay: 200ms;
+}
+
+.switcher-hint span + .switcher-key {
+  margin-left: 0.45rem;
 }
 
 .switcher-key {
-  padding: 1px 5px 2px;
+  padding: 1px 4px 2px;
   font-family: inherit;
-  font-size: 0.6rem;
+  font-size: 0.56rem;
   line-height: 1;
   border: 1px solid var(--rule-strong);
   border-radius: 2px;
+}
+
+/* The list opens over the column of external links on the right edge;
+   they step aside until it closes. */
+@media (min-width: 881px) {
+  .side-links {
+    transition: opacity 320ms var(--ease), visibility 0s linear 0s;
+  }
+
+  .is-choosing-background .side-links {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 240ms var(--ease), visibility 0s linear 240ms;
+  }
+}
+
+/* No hover on a touchscreen: the arrows stay in view, and the keyboard
+   hint has nothing to say. */
+@media (hover: none) {
+  .switcher-step {
+    opacity: 0.6;
+    transform: none;
+  }
+
+  .switcher-hint {
+    display: none;
+  }
 }
 
 /* ---- scroll reveal ------------------------------------------------------- */
@@ -779,20 +913,19 @@
   }
 
   .switcher {
-    bottom: 1.1rem;
-    right: 1.1rem;
+    right: 0.55rem;
+    bottom: 0.45rem;
   }
 
   .switcher-caption {
     max-width: 15rem;
   }
 
-  /* No keyboard to press B on. */
-  .switcher-hint {
-    display: none;
+  .switcher-name {
+    min-width: 0;
   }
 
-  .switcher-label {
-    min-width: 0;
+  .switcher-option {
+    grid-template-columns: 1.3rem auto 8px;
   }
 }

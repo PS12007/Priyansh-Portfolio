@@ -36,7 +36,7 @@
         try {
           id = new URLSearchParams(location.search).get('bg') || sessionStorage.getItem('pf.background');
         } catch (e) {}
-        var dark = { life: 1, snake: 1, horizon: 1, petri: 1 };
+        var dark = { life: 1, snake: 1, horizon: 1, petri: 1, galaxies: 1, smoke: 1 };
         if (id && dark[id]) document.documentElement.dataset.theme = 'dark';
       })();
     </script>
@@ -76,6 +76,9 @@
     <script defer src="js/backgrounds/horizon.js"></script>
     <script defer src="js/backgrounds/turing.js"></script>
     <script defer src="js/backgrounds/petri.js"></script>
+    <script defer src="js/backgrounds/galaxies.js"></script>
+    <script defer src="js/backgrounds/smoke.js"></script>
+    <script defer src="js/backgrounds/starlings.js"></script>
     <script defer src="js/backgrounds/manager.js"></script>
 
     <script defer src="js/data/content.js"></script>

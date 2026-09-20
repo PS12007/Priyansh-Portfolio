@@ -105,6 +105,7 @@ window.PF = window.PF || {};
     id: 'waves',
     label: 'Waves',
     caption: 'Two interfering waves, warped by simplex noise.',
+    swatch: 'linear-gradient(135deg, #16181c 50%, #efeee9 50%)',
     theme: 'light',
     base: 'rgb(239, 238, 233)',
     Ctor: PixelWaves,

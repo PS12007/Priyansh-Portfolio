@@ -138,6 +138,7 @@ window.PF = window.PF || {};
     id: 'bloom',
     label: 'Bloom',
     caption: 'Domain-warped noise, swept around a cyclic palette.',
+    swatch: 'conic-gradient(from 30deg, #ffecb0, #ffacc8, #dab6ff, #84d6ff, #84eed0, #ffecb0)',
     theme: 'light',
     base: BASE,
     Ctor: PixelBloom,

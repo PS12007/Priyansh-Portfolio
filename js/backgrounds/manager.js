@@ -13,8 +13,10 @@ window.PF = window.PF || {};
   var util = PF.util;
 
   /* Cycle order. Light and dark alternate, so stepping through them reads as
-     a deliberate sequence rather than a list. Bloom opens the site. */
-  var ORDER = ['bloom', 'life', 'prism', 'snake', 'waves', 'horizon', 'turing', 'petri'];
+     a deliberate sequence rather than a list; with one more dark mode than
+     light, Smoke and Petri share the single dark pair before the loop comes
+     back round to Bloom, which opens the site. */
+  var ORDER = ['bloom', 'life', 'prism', 'snake', 'waves', 'horizon', 'starlings', 'galaxies', 'turing', 'smoke', 'petri'];
   var DEFAULT_ID = 'bloom';
   /* Session storage, not local: a reload keeps whatever you switched to, but
      every new visit opens on the default. */
@@ -31,6 +33,7 @@ window.PF = window.PF || {};
     var spec = PF.backgrounds[id];
     if (!spec) return null;
     if (spec.requires === 'webgl' && !PF.Background.webglAvailable()) return null;
+    if (spec.requires === 'webgl-float' && !PF.Background.floatAvailable()) return null;
     return spec;
   }
 
@@ -45,7 +48,7 @@ window.PF = window.PF || {};
   function list() {
     return available().map(function (id) {
       var spec = specFor(id);
-      return { id: spec.id, label: spec.label, theme: spec.theme, caption: spec.caption };
+      return { id: spec.id, label: spec.label, theme: spec.theme, caption: spec.caption, swatch: spec.swatch };
     });
   }
 

@@ -20,7 +20,11 @@ window.PF = window.PF || {};
      '2d'    — the default. Modes write pixels or draw paths on the CPU.
      'webgl' — the shader modes. The base class owns the context, a
                full-screen triangle and context-loss handling; the mode
-               supplies a fragment shader and sets its own uniforms. */
+               supplies a fragment shader and sets its own uniforms.
+               Setting `webgl2` asks for a WebGL 2 context where there is
+               one, which is what makes half-float render targets
+               dependable. Shaders stay GLSL ES 1.00, so they run on
+               either. */
 
   var DEFAULTS = {
     fps: 30,
@@ -40,6 +44,31 @@ window.PF = window.PF || {};
     'attribute vec2 a_pos;' +
     'void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }';
 
+  /** A texture and the framebuffer that renders into it, left bound. */
+  function createTarget(gl, w, h, format, filter) {
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, format.internal, w, h, 0, format.format, format.type, null);
+
+    var fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    gl.viewport(0, 0, w, h);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    return { tex: tex, fbo: fbo, w: w, h: h };
+  }
+
+  function freeTarget(gl, target) {
+    if (!target) return;
+    gl.deleteFramebuffer(target.fbo);
+    gl.deleteTexture(target.tex);
+  }
+
   class Background {
     constructor(layer, options) {
       this.layer = layer;
@@ -52,7 +81,7 @@ window.PF = window.PF || {};
       this.gl = null;
       this.ctx = null;
       if (this.opts.context === 'webgl') {
-        this.gl = Background.createGL(this.canvas);
+        this.gl = Background.createGL(this.canvas, this.opts.webgl2 ? 2 : 1);
         this._onContextLost = this._handleContextLost.bind(this);
         this._onContextRestored = this._handleContextRestored.bind(this);
         this.canvas.addEventListener('webglcontextlost', this._onContextLost);
@@ -100,7 +129,7 @@ window.PF = window.PF || {};
       return Background._webgl;
     }
 
-    static createGL(canvas) {
+    static createGL(canvas, version) {
       var attrs = {
         alpha: false,
         antialias: false,
@@ -111,10 +140,60 @@ window.PF = window.PF || {};
         powerPreference: 'default',
       };
       try {
-        return canvas.getContext('webgl', attrs) || canvas.getContext('experimental-webgl', attrs);
+        var gl = version === 2 ? canvas.getContext('webgl2', attrs) : null;
+        return gl || canvas.getContext('webgl', attrs) || canvas.getContext('experimental-webgl', attrs);
       } catch (e) {
         return null;
       }
+    }
+
+    /** Whether modes that simulate in floating point can run here: WebGL
+        that can render into, and linearly filter, half-float textures. */
+    static floatAvailable() {
+      if (Background._float === undefined) {
+        var gl = Background.createGL(document.createElement('canvas'), 2);
+        var format = gl ? Background.halfFloatFormat(gl) : null;
+        Background._float = !!(format && format.linear);
+        if (gl) {
+          var lose = gl.getExtension('WEBGL_lose_context');
+          if (lose) lose.loseContext();
+        }
+      }
+      return Background._float;
+    }
+
+    /** The half-float texture format a context can render into, as the
+        arguments texImage2D wants, or null if it has none. WebGL 2 has the
+        format built in but needs an extension to render to it; WebGL 1
+        needs extensions for both, and a third to filter it. */
+    static halfFloatFormat(gl) {
+      var format = null;
+      if (typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext) {
+        if (gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float')) {
+          format = { internal: gl.RGBA16F, format: gl.RGBA, type: gl.HALF_FLOAT, linear: true };
+        }
+      } else {
+        var half = gl.getExtension('OES_texture_half_float');
+        if (half) {
+          gl.getExtension('EXT_color_buffer_half_float');
+          format = {
+            internal: gl.RGBA,
+            format: gl.RGBA,
+            type: half.HALF_FLOAT_OES,
+            linear: !!gl.getExtension('OES_texture_half_float_linear'),
+          };
+        }
+      }
+      // Advertised is not the same as working: some drivers expose the
+      // extensions and still refuse the framebuffer.
+      if (format) {
+        var probe = createTarget(gl, 4, 4, format, gl.NEAREST);
+        var complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        freeTarget(gl, probe);
+        if (!complete) format = null;
+      }
+      return format;
     }
 
     /* ---- lifecycle ---------------------------------------------------- */
@@ -277,9 +356,11 @@ window.PF = window.PF || {};
       this._glBuffer = buffer;
     }
 
-    /** Compile a fragment shader against the shared vertex stage and return
-        the program with its uniform locations looked up by name. */
-    program(fragmentSource, uniformNames) {
+    /** Compile a fragment shader and return the program with its uniform
+        locations looked up by name. The vertex stage is the shared
+        full-screen one unless the mode brings its own, in which case its
+        attributes are bound to locations 0, 1, 2… in the order given. */
+    program(fragmentSource, uniformNames, vertexSource, attributeNames) {
       var gl = this.gl;
 
       function compile(type, source) {
@@ -293,9 +374,10 @@ window.PF = window.PF || {};
       }
 
       var prog = gl.createProgram();
-      gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERTEX_SHADER));
+      gl.attachShader(prog, compile(gl.VERTEX_SHADER, vertexSource || VERTEX_SHADER));
       gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fragmentSource));
-      gl.bindAttribLocation(prog, 0, 'a_pos');
+      var attributes = attributeNames || ['a_pos'];
+      for (var a = 0; a < attributes.length; a++) gl.bindAttribLocation(prog, a, attributes[a]);
       gl.linkProgram(prog);
       if (!gl.getProgramParameter(prog, gl.LINK_STATUS) && !gl.isContextLost()) {
         throw new Error('Shader link failed: ' + gl.getProgramInfoLog(prog));
@@ -316,6 +398,27 @@ window.PF = window.PF || {};
       gl.enableVertexAttribArray(0);
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    /** An offscreen render target: { tex, fbo, w, h }. `format` is what
+        halfFloatFormat() returned, or omitted for plain 8-bit RGBA. */
+    target(w, h, format, filter) {
+      var gl = this.gl;
+      var fmt = format || { internal: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE };
+      var t = createTarget(gl, Math.max(1, w | 0), Math.max(1, h | 0), fmt, filter || gl.LINEAR);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      return t;
+    }
+
+    freeTarget(target) {
+      if (this.gl) freeTarget(this.gl, target);
+    }
+
+    /** Render into `target`, or into the canvas when it is null. */
+    bindTarget(target) {
+      var gl = this.gl;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.fbo : null);
+      gl.viewport(0, 0, target ? target.w : this.w, target ? target.h : this.h);
     }
 
     _handleContextLost(e) {

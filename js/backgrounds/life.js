@@ -250,6 +250,7 @@ window.PF = window.PF || {};
     id: 'life',
     label: 'Life',
     caption: 'Conway’s Game of Life. Move the cursor to sow cells.',
+    swatch: 'radial-gradient(circle at 35% 35%, #c6f0ff, #4860d6 70%)',
     theme: 'dark',
     base: BASE,
     Ctor: Life,
