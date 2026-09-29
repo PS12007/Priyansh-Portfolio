@@ -3,8 +3,8 @@
    Each one runs the same policy every tick:
 
    1. Breadth-first search outward from the head until it reaches food — its
-      own, or a bonus pellet dropped by the cursor, whichever is nearer by
-      path rather than by distance.
+      own, or any pellet a visitor has dropped, whichever is nearer by path
+      rather than by distance.
    2. Before committing, simulate that move and flood-fill the free space the
       head could still reach. If taking the food would leave less room than the
       snake is long, the path is a trap — reject it.
@@ -12,15 +12,14 @@
       reachable area. That is what keeps them alive long enough to be worth
       watching; pure greedy pathfinding coils up and dies in seconds.
 
-   The whole board is in play, text included. They compete for the cursor's
-   pellets and cut each other off, so the board keeps producing situations
-   none of them planned for.
+   Clicking anywhere on the page drops a pellet. They all want it, so a click
+   is usually enough to start a race.
 
-   The look is the classic game, cleaned up: a quiet checkerboard, flat
-   rounded bodies in one colour each, a head that looks where it is going.
-   The grid ticks about twelve times a second, but everything is drawn at
-   display rate — the head and tail are interpolated between ticks, so the
-   bodies glide rather than step. */
+   The look borrows from the phones the game was famous on: an unlit dot
+   matrix, square segments with a hairline between them, a four-pixel
+   diamond for food, a bulge that travels down the body after a meal, and a
+   blink when a snake dies. The grid ticks about twelve times a second but is
+   drawn at display rate, so the head and tail slide rather than step. */
 window.PF = window.PF || {};
 
 (function (PF) {
@@ -28,40 +27,35 @@ window.PF = window.PF || {};
 
   var util = PF.util;
 
-  var BOARD = 'rgb(10, 11, 15)';
-  var BOARD_ALT = 'rgb(13, 14, 19)';
+  var BOARD_RGB = [11, 12, 14];
+  var BOARD = 'rgb(11, 12, 14)';
+  var DOT = 'rgba(255, 255, 255, 0.028)';
 
   var TICK_SECONDS = 0.082;
   var START_LENGTH = 12;
   var GROW_PER_FOOD = 3;
   var MAX_LENGTH = 56;
   var RESPAWN_SECONDS = 1.2;
-  var DEATH_SECONDS = 0.7;
-  var SPAWN_SECONDS = 0.35;
+  var DEATH_SECONDS = 0.9;
+  var SPAWN_SECONDS = 0.3;
+  var MAX_TREATS = 24;
 
-  /* Cursor pellets: at most one on the board, no more often than this. */
-  var BAIT_COOLDOWN = 0.9;
-
-  /* One flat colour per snake, pale enough to glow against the board
-     without any actual glow. */
+  /* Muted, slightly warm tones: distinct from one another without any of
+     them shouting. The visitor's food is the one saturated colour on the
+     board, so it is always the thing you see first. */
   var AGENTS = [
-    [110, 231, 183], // mint
-    [125, 211, 252], // sky
-    [253, 164, 175], // rose
-    [252, 211, 77], // amber
-    [196, 181, 253], // lavender
+    [228, 223, 209], // bone
+    [148, 188, 160], // sage
+    [220, 182, 128], // ochre
+    [148, 170, 208], // slate
+    [204, 162, 190], // mauve
   ];
-  var BAIT_RGB = [255, 250, 240];
-  var EYE_RGB = [14, 16, 22];
-
-  var BODY = 0.7;     // body width, as a share of a cell
-  var HEAD = 0.46;    // head radius, as a share of a cell
-  var TAPER = 4;      // cells over which the tail narrows
+  var TREAT_RGB = [255, 112, 80];
 
   var DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
-  function rgb(c, a) {
-    return 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a + ')';
+  function rgb(c) {
+    return 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')';
   }
 
   function mix(a, b, k) {
@@ -77,7 +71,7 @@ window.PF = window.PF || {};
       fps: 60,
       mode: 'dpr',
       dprCap: 2,
-      smoothing: true,
+      smoothing: false,
       staticTime: 0,
       budget: 9,
     };
@@ -86,9 +80,12 @@ window.PF = window.PF || {};
       this.acc = 0;
       this.boardCanvas = document.createElement('canvas');
       this.effects = [];
-      this.bait = null;
-      this.baitClock = 0;
-      this.lastPointerCell = -1;
+      this.treats = [];
+      this.offTap = PF.pointer.onTap(this.dropTreat.bind(this));
+    }
+
+    teardown() {
+      if (this.offTap) this.offTap();
     }
 
     resized() {
@@ -99,6 +96,7 @@ window.PF = window.PF || {};
       // display. Smaller screens get slightly smaller cells and fewer agents.
       var narrow = cssW < 700;
       this.cell = narrow ? 18 : 22;
+      this.gap = Math.max(1.5, this.cell * 0.09);
       this.cols = Math.max(12, Math.floor(cssW / this.cell));
       this.rows = Math.max(12, Math.floor(cssH / this.cell));
       this.ox = (cssW - this.cols * this.cell) / 2;
@@ -112,8 +110,7 @@ window.PF = window.PF || {};
       this.stamp = 0;
 
       this.effects = [];
-      this.bait = null;
-      this.lastPointerCell = -1;
+      this.treats = [];
 
       var count = narrow ? 3 : util.lowPower() ? 3 : 4;
       this.snakes = [];
@@ -125,30 +122,30 @@ window.PF = window.PF || {};
       for (var k = 0; k < START_LENGTH + 30; k++) this.tick(0);
       for (i = 0; i < this.snakes.length; i++) this.snakes[i].born = -1;
 
-      // Whatever the warmup ate or spawned happened off screen; its rings
-      // would otherwise open the show, or sit frozen on the still frame.
+      // Whatever the warmup ate or killed happened off screen.
       this.effects = [];
       this.acc = 0;
       this.paintBoard();
     }
 
-    /** The board: a checkerboard so faint it reads as texture, painted
-        once. Cell edges are snapped to device pixels so no seam shows. */
+    /** The unlit matrix: every cell a faint square, painted once and
+        snapped to device pixels so the hairlines between them stay even. */
     paintBoard() {
       var c = this.boardCanvas;
       c.width = this.w;
       c.height = this.h;
       var g = c.getContext('2d');
       var s = this.scale;
+      var gap = this.gap;
       g.fillStyle = BOARD;
       g.fillRect(0, 0, this.w, this.h);
-      g.fillStyle = BOARD_ALT;
+      g.fillStyle = DOT;
       for (var y = 0; y < this.rows; y++) {
-        var y0 = Math.round((this.oy + y * this.cell) * s);
-        var y1 = Math.round((this.oy + (y + 1) * this.cell) * s);
-        for (var x = y & 1; x < this.cols; x += 2) {
-          var x0 = Math.round((this.ox + x * this.cell) * s);
-          var x1 = Math.round((this.ox + (x + 1) * this.cell) * s);
+        var y0 = Math.round((this.oy + y * this.cell + gap) * s);
+        var y1 = Math.round((this.oy + (y + 1) * this.cell - gap) * s);
+        for (var x = 0; x < this.cols; x++) {
+          var x0 = Math.round((this.ox + x * this.cell + gap) * s);
+          var x1 = Math.round((this.ox + (x + 1) * this.cell - gap) * s);
           g.fillRect(x0, y0, x1 - x0, y1 - y0);
         }
       }
@@ -169,12 +166,21 @@ window.PF = window.PF || {};
       return null;
     }
 
+    treatAt(x, y) {
+      for (var i = 0; i < this.treats.length; i++) {
+        if (this.treats[i].x === x && this.treats[i].y === y) return i;
+      }
+      return -1;
+    }
+
     isFood(i) {
-      if (this.bait && this.idx(this.bait.x, this.bait.y) === i) return true;
+      var x = i % this.cols;
+      var y = (i / this.cols) | 0;
+      if (this.treats && this.treatAt(x, y) >= 0) return true;
       var snakes = this.snakes || [];
       for (var s = 0; s < snakes.length; s++) {
         var f = snakes[s].food;
-        if (f && this.idx(f.x, f.y) === i) return true;
+        if (f && f.x === x && f.y === y) return true;
       }
       return false;
     }
@@ -191,6 +197,8 @@ window.PF = window.PF || {};
         dead: 0,
         born: this.time || 0,
         dir: [1, 0],
+        // Body indices of meals on their way down.
+        bulges: [],
       };
       this.occ[this.idx(spot.x, spot.y)] = agentIndex + 1;
       snake.food = this.freeCell();
@@ -198,7 +206,7 @@ window.PF = window.PF || {};
     }
 
     kill(snake) {
-      // The body stays where it died and fades out, thinning as it goes.
+      // The body stays where it died and blinks out.
       this.effects.push({
         kind: 'ghost',
         pts: this.points(snake, 1),
@@ -211,6 +219,7 @@ window.PF = window.PF || {};
         this.occ[this.idx(c.x, c.y)] = 0;
       }
       snake.body = [];
+      snake.bulges = [];
       snake.food = null;
       snake.dead = RESPAWN_SECONDS;
     }
@@ -326,7 +335,7 @@ window.PF = window.PF || {};
 
       var targets = [];
       if (snake.food) targets.push(this.idx(snake.food.x, snake.food.y));
-      if (this.bait) targets.push(this.idx(this.bait.x, this.bait.y));
+      for (var t = 0; t < this.treats.length; t++) targets.push(this.idx(this.treats[t].x, this.treats[t].y));
 
       if (targets.length) {
         var step = this.seek(snake, targets);
@@ -378,23 +387,31 @@ window.PF = window.PF || {};
         snake.dir = [move.x - head.x, move.y - head.y];
 
         var ateOwn = snake.food && move.x === snake.food.x && move.y === snake.food.y;
-        var ateBait = this.bait && move.x === this.bait.x && move.y === this.bait.y;
+        var treat = this.treatAt(move.x, move.y);
 
         snake.body.unshift({ x: move.x, y: move.y });
         this.occ[this.idx(move.x, move.y)] = snake.agent + 1;
 
-        if (ateOwn || ateBait) {
+        // The new head pushed every segment one further from it.
+        var bulges = [];
+        for (var b = 0; b < snake.bulges.length; b++) {
+          if (snake.bulges[b] + 1 < snake.body.length) bulges.push(snake.bulges[b] + 1);
+        }
+        snake.bulges = bulges;
+
+        if (ateOwn || treat >= 0) {
           if (snake.body.length < MAX_LENGTH) snake.grow += GROW_PER_FOOD;
+          snake.bulges.push(0);
           this.effects.push({
-            kind: 'ring',
+            kind: 'burst',
             x: this.ox + (move.x + 0.5) * cell,
             y: this.oy + (move.y + 0.5) * cell,
             life: 0,
-            span: 0.55,
-            color: ateBait ? BAIT_RGB : AGENTS[snake.agent],
+            span: 0.4,
+            color: treat >= 0 ? TREAT_RGB : AGENTS[snake.agent],
           });
           if (ateOwn) snake.food = this.freeCell();
-          if (ateBait) this.bait = null;
+          if (treat >= 0) this.treats.splice(treat, 1);
         }
 
         if (snake.grow > 0) {
@@ -408,31 +425,36 @@ window.PF = window.PF || {};
       }
     }
 
-    /** Moving the cursor into a new cell drops a pellet there, if the board
-        does not already have one and the cooldown has passed. */
-    dropBait(dt) {
-      this.baitClock -= dt;
-      var pointer = PF.pointer;
-      if (!pointer.active || pointer.strength < 0.4) return;
+    /** A click drops a pellet in the cell under it, or the nearest free
+        cell if a snake is already there. */
+    dropTreat(clientX, clientY) {
+      if (!this.cols) return;
+      var cx = Math.floor((clientX - this.ox) / this.cell);
+      var cy = Math.floor((clientY - this.oy) / this.cell);
 
-      var x = Math.floor((pointer.tx * this.cssW - this.ox) / this.cell);
-      var y = Math.floor((pointer.ty * this.cssH - this.oy) / this.cell);
-      if (x < 0 || x >= this.cols || y < 0 || y >= this.rows) return;
+      var spot = null;
+      for (var r = 0; r <= 2 && !spot; r++) {
+        for (var dy = -r; dy <= r && !spot; dy++) {
+          for (var dx = -r; dx <= r && !spot; dx++) {
+            var x = cx + dx;
+            var y = cy + dy;
+            if (x < 0 || x >= this.cols || y < 0 || y >= this.rows) continue;
+            var i = this.idx(x, y);
+            if (!this.occ[i] && !this.isFood(i)) spot = { x: x, y: y, born: this.time };
+          }
+        }
+      }
+      if (!spot) return;
 
-      var i = this.idx(x, y);
-      if (i === this.lastPointerCell) return;
-      this.lastPointerCell = i;
-
-      if (this.bait || this.baitClock > 0 || this.occ[i] || this.isFood(i)) return;
-      this.bait = { x: x, y: y, born: this.time };
-      this.baitClock = BAIT_COOLDOWN;
+      if (this.treats.length >= MAX_TREATS) this.treats.shift();
+      this.treats.push(spot);
+      if (!this.running) this.frame(this.time, 0);
     }
 
     /* ---- rendering ----------------------------------------------------- */
 
     frame(t, dt) {
       if (dt > 0) {
-        this.dropBait(dt);
         this.acc += dt;
         var budget = 3;
         while (this.acc >= TICK_SECONDS && budget-- > 0) {
@@ -447,20 +469,13 @@ window.PF = window.PF || {};
       var f = dt > 0 ? this.acc / TICK_SECONDS : 1;
 
       var ctx = this.ctx;
-      var s = this.scale;
-
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
       ctx.drawImage(this.boardCanvas, 0, 0);
 
-      ctx.setTransform(s, 0, 0, s, 0, 0);
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
       this.drawFood(t);
       this.drawEffects(dt);
-      for (var i = 0; i < this.snakes.length; i++) this.drawSnake(this.snakes[i], f, t);
+      for (var i = 0; i < this.snakes.length; i++) this.drawSnake(this.snakes[i], f);
     }
 
     /** The interpolated centre-line of a snake, head first, in CSS pixels. */
@@ -487,7 +502,7 @@ window.PF = window.PF || {};
 
       // Tail: still leaving the cell it vacated at the last tick.
       var pt = snake.prevTail;
-      if (pt && n > 0) {
+      if (pt) {
         var last = body[n - 1];
         pts.push({
           x: ox + (pt.x + (last.x - pt.x) * f) * cell,
@@ -497,153 +512,116 @@ window.PF = window.PF || {};
       return pts;
     }
 
-    /** A body as one flat stroke, so nothing beads at the joints, and a
-        tail that narrows smoothly over its last few cells. The tail is cut
-        into short pieces, each a touch thinner than the last; they are the
-        body's own colour, so where their round caps overlap nothing shows. */
-    strokeBody(pts, color, width, alpha) {
+    /** A square of half-size `half` around (x, y), or the box spanning two
+        such squares, snapped to device pixels. */
+    block(x0, y0, x1, y1, half) {
+      var s = this.scale;
+      var l = Math.round((Math.min(x0, x1) - half) * s);
+      var r = Math.round((Math.max(x0, x1) + half) * s);
+      var t = Math.round((Math.min(y0, y1) - half) * s);
+      var b = Math.round((Math.max(y0, y1) + half) * s);
+      this.ctx.fillRect(l, t, r - l, b - t);
+    }
+
+    /** Each neighbouring pair of points is joined by one box the width of a
+        segment, so a straight run is a solid bar and a bend is a clean
+        right angle. Drawn tail first, dimming toward the tail, with each
+        box opaque so nothing doubles up where they overlap. */
+    fillBody(pts, color, half, dim) {
       var ctx = this.ctx;
       var n = pts.length;
-      if (n < 2) return;
-      ctx.strokeStyle = rgb(color, alpha);
-
-      var taper = Math.min(TAPER, n - 1);
-      var main = n - taper;
-      ctx.lineWidth = width;
-      if (main > 1) {
-        ctx.beginPath();
-        ctx.moveTo(pts[0].x, pts[0].y);
-        for (var i = 1; i < main; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.stroke();
+      if (n === 1) {
+        ctx.fillStyle = rgb(color);
+        this.block(pts[0].x, pts[0].y, pts[0].x, pts[0].y, half);
+        return;
       }
-
-      var SUB = 4;
-      var total = taper * SUB;
-      for (var k = 0; k < taper; k++) {
-        var a = pts[main - 1 + k];
-        var b = pts[main + k];
-        for (var j = 0; j < SUB; j++) {
-          var u = (k * SUB + j + 0.5) / total;
-          ctx.lineWidth = width * (1 - 0.7 * u);
-          ctx.beginPath();
-          ctx.moveTo(a.x + (b.x - a.x) * (j / SUB), a.y + (b.y - a.y) * (j / SUB));
-          ctx.lineTo(a.x + (b.x - a.x) * ((j + 1) / SUB), a.y + (b.y - a.y) * ((j + 1) / SUB));
-          ctx.stroke();
-        }
+      for (var i = n - 2; i >= 0; i--) {
+        var k = n > 2 ? i / (n - 2) : 0;
+        ctx.fillStyle = rgb(mix(color, BOARD_RGB, dim * k));
+        this.block(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y, half);
       }
     }
 
-    drawSnake(snake, f, t) {
+    drawSnake(snake, f) {
       var pts = this.points(snake, f);
       if (!pts.length) return;
 
       var ctx = this.ctx;
       var color = AGENTS[snake.agent];
       var cell = this.cell;
+      var s = this.scale;
 
-      // A newborn snake pops in rather than appearing.
+      // A newborn snake grows into its cell rather than appearing.
       var pop = snake.born < 0 ? 1 : easeOut(util.clamp((this.time - snake.born) / SPAWN_SECONDS, 0, 1));
       if (pop <= 0) return;
 
-      this.strokeBody(pts, color, cell * BODY * pop, 1);
+      var half = (cell / 2 - this.gap) * pop;
+      this.fillBody(pts, color, half, 0.5);
 
-      // A soft sheen along the top of the tube, as if lit from above.
-      if (pts.length > 3) {
-        var off = cell * 0.09;
-        ctx.strokeStyle = rgb(mix(color, [255, 255, 255], 0.5), 0.38);
-        ctx.lineWidth = cell * 0.14 * pop;
-        ctx.beginPath();
-        var end = Math.max(2, pts.length - 3);
-        ctx.moveTo(pts[1].x - off * 0.6, pts[1].y - off);
-        for (var i = 2; i < end; i++) ctx.lineTo(pts[i].x - off * 0.6, pts[i].y - off);
-        ctx.stroke();
+      // Meals on their way down: a segment briefly a size wider.
+      var n = pts.length;
+      for (var b = 0; b < snake.bulges.length; b++) {
+        var at = snake.bulges[b];
+        if (at >= n) continue;
+        var k = n > 2 ? at / (n - 2) : 0;
+        ctx.fillStyle = rgb(mix(color, BOARD_RGB, 0.5 * Math.min(1, k)));
+        this.block(pts[at].x, pts[at].y, pts[at].x, pts[at].y, half + this.gap * 0.8);
       }
 
-      // Head, and eyes that look the way it is heading.
+      // The head: a touch brighter than the body, with two dark pixels for
+      // eyes set toward the direction of travel.
       var h = pts[0];
       var dx = snake.dir[0];
       var dy = snake.dir[1];
-      ctx.fillStyle = rgb(color, 1);
-      ctx.beginPath();
-      ctx.arc(h.x, h.y, cell * HEAD * pop, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = rgb(mix(color, [255, 255, 255], 0.35));
+      this.block(h.x, h.y, h.x, h.y, half);
 
-      var fwd = cell * 0.1;
-      var side = cell * 0.19;
-      var eye = cell * 0.12 * pop;
-      var pupil = cell * 0.066 * pop;
+      if (pop < 1) return;
+      var eye = Math.max(1, Math.round(cell * 0.13 * s));
+      var fwd = cell * 0.14;
+      var side = cell * 0.18;
+      ctx.fillStyle = rgb(BOARD_RGB);
       for (var e = -1; e <= 1; e += 2) {
         var ex = h.x + dx * fwd - dy * side * e;
         var ey = h.y + dy * fwd + dx * side * e;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-        ctx.beginPath();
-        ctx.arc(ex, ey, eye, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = rgb(EYE_RGB, 1);
-        ctx.beginPath();
-        ctx.arc(ex + dx * eye * 0.4, ey + dy * eye * 0.4, pupil, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(Math.round(ex * s - eye / 2), Math.round(ey * s - eye / 2), eye, eye);
       }
     }
 
-    foodList() {
+    /** The classic four-pixel diamond; a visitor's pellet also fills its
+        centre, and lands with a short blink so you can see where it went. */
+    diamond(x, y, color, full, scale) {
       var cell = this.cell;
-      var list = [];
+      var p = cell * 0.13 * scale;
+      var off = cell * 0.2 * scale;
+      this.ctx.fillStyle = rgb(color);
+      this.block(x - off, y, x - off, y, p);
+      this.block(x + off, y, x + off, y, p);
+      this.block(x, y - off, x, y - off, p);
+      this.block(x, y + off, x, y + off, p);
+      if (full) this.block(x, y, x, y, p);
+    }
+
+    drawFood(t) {
+      var cell = this.cell;
       for (var i = 0; i < this.snakes.length; i++) {
         var sn = this.snakes[i];
         if (!sn.food || sn.dead > 0) continue;
-        list.push({
-          x: this.ox + (sn.food.x + 0.5) * cell,
-          y: this.oy + (sn.food.y + 0.5) * cell,
-          color: AGENTS[sn.agent],
-          bait: false,
-          seed: i * 1.7,
-        });
+        this.diamond(
+          this.ox + (sn.food.x + 0.5) * cell,
+          this.oy + (sn.food.y + 0.5) * cell,
+          mix(AGENTS[sn.agent], BOARD_RGB, 0.15),
+          false,
+          1
+        );
       }
-      if (this.bait) {
-        list.push({
-          x: this.ox + (this.bait.x + 0.5) * cell,
-          y: this.oy + (this.bait.y + 0.5) * cell,
-          color: BAIT_RGB,
-          bait: true,
-          seed: 9,
-        });
-      }
-      return list;
-    }
 
-    /** Food: a small bead in its snake's colour, breathing gently, with a
-        soft halo so it can be found at a glance. */
-    drawFood(t) {
-      var ctx = this.ctx;
-      var cell = this.cell;
-      var foods = this.foodList();
-
-      for (var i = 0; i < foods.length; i++) {
-        var fd = foods[i];
-        var pulse = 0.5 + 0.5 * Math.sin(t * 3.2 + fd.seed);
-
-        var halo = cell * (0.9 + 0.15 * pulse);
-        var g = ctx.createRadialGradient(fd.x, fd.y, 0, fd.x, fd.y, halo);
-        g.addColorStop(0, rgb(fd.color, 0.22));
-        g.addColorStop(1, rgb(fd.color, 0));
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(fd.x, fd.y, halo, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = rgb(fd.color, 1);
-        ctx.beginPath();
-        ctx.arc(fd.x, fd.y, cell * (fd.bait ? 0.26 : 0.22) * (0.92 + 0.12 * pulse), 0, Math.PI * 2);
-        ctx.fill();
-
-        if (fd.bait) {
-          ctx.strokeStyle = rgb(fd.color, 0.3 + 0.35 * (1 - pulse));
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(fd.x, fd.y, cell * (0.46 + 0.16 * pulse), 0, Math.PI * 2);
-          ctx.stroke();
-        }
+      for (var j = 0; j < this.treats.length; j++) {
+        var tr = this.treats[j];
+        var age = this.time - tr.born;
+        if (age < 0.6 && Math.floor(age * 10) % 2 === 1) continue;
+        var grow = easeOut(util.clamp(age / 0.18, 0, 1));
+        this.diamond(this.ox + (tr.x + 0.5) * cell, this.oy + (tr.y + 0.5) * cell, TREAT_RGB, true, 0.4 + 0.6 * grow);
       }
     }
 
@@ -659,16 +637,19 @@ window.PF = window.PF || {};
         if (k >= 1) continue;
         live.push(e);
 
-        if (e.kind === 'ring') {
-          var r = cell * (0.35 + 1.1 * easeOut(k));
-          ctx.strokeStyle = rgb(e.color, 0.55 * (1 - k));
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
-          ctx.stroke();
-        } else {
-          // A body fading where it died, thinning as it goes.
-          this.strokeBody(e.pts, e.color, cell * BODY * (1 - 0.55 * k), (1 - k) * (1 - k));
+        if (e.kind === 'burst') {
+          // Four pixels thrown out along the diagonals, fading as they go.
+          var d = cell * (0.35 + 0.7 * easeOut(k));
+          var p = cell * 0.09 * (1 - k * 0.5);
+          ctx.fillStyle = rgb(mix(e.color, BOARD_RGB, k));
+          this.block(e.x - d, e.y - d, e.x - d, e.y - d, p);
+          this.block(e.x + d, e.y - d, e.x + d, e.y - d, p);
+          this.block(e.x - d, e.y + d, e.x - d, e.y + d, p);
+          this.block(e.x + d, e.y + d, e.x + d, e.y + d, p);
+        } else if (Math.floor(k * 6) % 2 === 0) {
+          // A dead snake blinks three times, dimmer each time, and is gone.
+          var faded = mix(e.color, BOARD_RGB, 0.25 + 0.5 * k);
+          this.fillBody(e.pts, faded, cell / 2 - this.gap, 0.4);
         }
       }
       this.effects = live;
@@ -679,7 +660,7 @@ window.PF = window.PF || {};
   PF.backgrounds.snake = {
     id: 'snake',
     label: 'Snake',
-    caption: 'Four agents playing Snake: BFS to food, flood fill to stay alive. Move the cursor to drop food.',
+    caption: 'Four agents playing Snake: BFS to food, flood fill to stay alive. Click to drop food.',
     theme: 'dark',
     base: BOARD,
     Ctor: Snake,

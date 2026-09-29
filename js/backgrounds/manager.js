@@ -13,10 +13,13 @@ window.PF = window.PF || {};
   var util = PF.util;
 
   /* Cycle order. Light and dark alternate, so stepping through them reads as
-     a deliberate sequence rather than a list; with one more dark mode than
-     light, Smoke and Petri share the single dark pair before the loop comes
-     back round to Bloom, which opens the site. */
-  var ORDER = ['bloom', 'life', 'prism', 'snake', 'waves', 'horizon', 'starlings', 'galaxies', 'turing', 'smoke', 'petri'];
+     a deliberate sequence rather than a list; with one more light mode than
+     dark, Ripples and Bloom meet as the only light pair where the loop comes
+     back round to the start. */
+  var ORDER = [
+    'bloom', 'life', 'prism', 'snake', 'waves', 'horizon', 'starlings',
+    'galaxies', 'turing', 'smoke', 'contours', 'petri', 'ripples',
+  ];
   var DEFAULT_ID = 'bloom';
   /* Session storage, not local: a reload keeps whatever you switched to, but
      every new visit opens on the default. */

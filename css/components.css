@@ -567,126 +567,122 @@
 
 /* ---- background switcher ------------------------------------------------- */
 
-/* A single rail of hairline ticks in the corner, one per mode, rising from
-   a shared baseline like the marks on a gauge. Nothing opens, nothing
-   overlaps the page: at rest it is a faint row of strokes, and the pointer
-   brings it up along with the name of whatever it is over. */
+/* One quiet line of type in the corner: a counter, the mode, and a keycap.
+   No panel and no border — it carries the same halo as the rest of the
+   type, which keeps it legible over any of the backgrounds. */
 .switcher {
   position: fixed;
   right: var(--edge);
-  bottom: calc(var(--edge) - 0.35rem);
+  bottom: calc(var(--edge) - 0.5rem);
   z-index: 30;
   display: grid;
   justify-items: end;
   font-family: var(--font-mono);
   color: var(--ink);
-  /* Only the ticks catch the pointer; the label is see-through. */
-  pointer-events: none;
 }
 
-/* Hung above the rail by its bottom edge, so a longer caption grows upward
-   and never nudges the ticks out from under the pointer. */
-.switcher-label {
+/* Hung above the control by its bottom edge, so a longer caption grows
+   upward and never moves the button out from under the pointer. */
+.switcher-caption {
   position: absolute;
   right: 0;
   bottom: 100%;
-  display: grid;
-  justify-items: end;
-  gap: 0.3rem;
   width: max-content;
-  max-width: 18rem;
-  padding-bottom: 0.8rem;
+  max-width: 17rem;
+  padding-bottom: 0.45rem;
+  font-size: 0.64rem;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
   text-align: right;
+  text-wrap: balance;
   opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 420ms var(--ease), transform 420ms var(--ease);
+  transform: translateY(3px);
+  pointer-events: none;
+  transition: opacity 380ms var(--ease), transform 380ms var(--ease);
 }
 
-.switcher.is-showing .switcher-label {
-  opacity: 1;
+.switcher.is-showing .switcher-caption {
+  opacity: 0.8;
   transform: none;
 }
 
-.switcher-name {
-  font-size: 0.66rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.switcher-caption {
+.switcher-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
   font-size: 0.64rem;
-  line-height: 1.6;
-  letter-spacing: 0.03em;
-  text-wrap: balance;
-  opacity: 0.78;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.62;
+  transition: opacity 300ms var(--ease);
 }
 
-/* Bottom-aligned, so every tick shares one baseline and only grows upward.
-   The halo is the same one the type carries, which is what keeps a 2px
-   stroke readable over the artwork without drawing a box around it. */
-.switcher-rail {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  pointer-events: auto;
-  filter: drop-shadow(0 0 2px var(--halo-core)) drop-shadow(0 0 6px var(--halo-mid));
-}
-
-/* The hit area is the whole cell; the stroke inside it is drawn by ::after,
-   and is the only thing that moves. Every cell keeps its width, so the rail
-   never reflows as the live mode travels along it. */
-.switcher-tick {
-  display: grid;
-  place-items: end center;
-  width: 10px;
-  height: 22px;
-}
-
-.switcher-tick::after {
-  content: '';
-  width: 2px;
-  height: 8px;
-  background: currentColor;
-  opacity: 0.32;
-  transition: height 420ms var(--ease), opacity 420ms var(--ease);
-}
-
-.switcher-tick:hover::after,
-.switcher-tick:focus-visible::after {
-  height: 13px;
-  opacity: 0.75;
-}
-
-/* The live mode stands tallest and at full strength. It is drawn in ink
-   rather than the mode's own colours, which are pastels on several of the
-   backgrounds and read as a smudge at this width. */
-.switcher-tick[aria-checked='true']::after {
-  height: 18px;
+.switcher-button:hover,
+.switcher-button:focus-visible,
+.switcher.is-showing .switcher-button {
   opacity: 1;
 }
 
-.switcher-tick:focus-visible {
-  outline: none;
+.switcher-button:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 3px;
 }
 
-.switcher-tick:focus-visible::after {
-  box-shadow: 0 0 0 1px var(--bg-base), 0 0 0 2px var(--ink);
+/* The shortcut, drawn as a small key rather than spelled out. */
+.switcher-key {
+  display: inline-grid;
+  place-items: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  font: inherit;
+  font-size: 0.58rem;
+  letter-spacing: 0;
+  line-height: 1;
+  border: 1px solid color-mix(in srgb, var(--ink) 45%, transparent);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  box-shadow: 0 0 6px var(--halo-mid);
+  transition: transform 120ms var(--ease), border-bottom-width 120ms var(--ease);
 }
 
-/* No hover on a touchscreen, so the rail stays legible on its own, and
-   fingers need more to aim at than a pointer does. */
+.switcher-key.is-pressed {
+  animation: switcher-press 220ms var(--ease);
+}
+
+@keyframes switcher-press {
+  40% {
+    transform: translateY(1px);
+    border-bottom-width: 1px;
+  }
+}
+
+.switcher-name.is-changing {
+  animation: switcher-swap 420ms var(--ease);
+}
+
+@keyframes switcher-swap {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+.switcher-count {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  opacity: 0.55;
+}
+
+/* No keyboard to speak of on a touchscreen: the key would only be noise. */
 @media (hover: none) {
-  .switcher-rail {
-    gap: 6px;
+  .switcher-key {
+    display: none;
   }
 
-  .switcher-tick {
-    width: 14px;
-    height: 26px;
-  }
-
-  .switcher-tick::after {
-    opacity: 0.55;
+  .switcher-button {
+    opacity: 0.85;
+    padding: 0.6rem 0;
   }
 }
 
@@ -786,11 +782,7 @@
     bottom: 0.5rem;
   }
 
-  .switcher-label {
+  .switcher-caption {
     max-width: 14rem;
-  }
-
-  .switcher-rail {
-    gap: 7px;
   }
 }

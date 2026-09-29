@@ -72,5 +72,28 @@ window.PF = window.PF || {};
     pointer.strength += (targetStrength - pointer.strength) * util.damp(1.4, dt);
   };
 
+  /* Clicks that land on the page itself rather than on something in it.
+     Links, buttons and the switcher keep their clicks, and so does the end
+     of a text selection. Backgrounds subscribe with onTap and get the point
+     in viewport pixels; the return value unsubscribes. */
+  var INTERACTIVE = 'a, button, input, textarea, select, summary, label, [role="button"], .switcher';
+  var tapListeners = [];
+
+  window.addEventListener('click', function (e) {
+    if (!tapListeners.length || e.button !== 0) return;
+    if (e.target && e.target.closest && e.target.closest(INTERACTIVE)) return;
+    var selection = window.getSelection && window.getSelection();
+    if (selection && !selection.isCollapsed) return;
+    for (var i = 0; i < tapListeners.length; i++) tapListeners[i](e.clientX, e.clientY);
+  });
+
+  pointer.onTap = function (fn) {
+    tapListeners.push(fn);
+    return function () {
+      var at = tapListeners.indexOf(fn);
+      if (at >= 0) tapListeners.splice(at, 1);
+    };
+  };
+
   PF.pointer = pointer;
 })(window.PF);
