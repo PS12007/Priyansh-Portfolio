@@ -12,7 +12,7 @@ window.SITE = {
 
   /* The order projects appear in. The first eight show; the rest sit behind "show all". */
   featured: [
-    'rvwasm', 'LazyKV', 'Latent Cartographer', 'Fused Quantized-KV Kernel', 'segfund-mc', 'kv-notary', 'mlkem-rs', 'raftkv',
+    'rvwasm', 'Aegis', 'LazyKV', 'Latent Cartographer', 'Fused Quantized-KV Kernel', 'segfund-mc', 'kv-notary', 'mlkem-rs', 'raftkv',
     'tokenscope', 'tinyfuse', 'Noether Check', 'kernelport', 'Hans Hunter', 'Arecibo Zero', 'Video to Humanoid', 'TermCinema', 'Locret for llama.cpp', 'Artists With Souls', 'SurFur',
   ],
 
@@ -278,6 +278,25 @@ window.SITE = {
     {
       group: 'Also',
       items: [
+        {
+          title: 'Aegis',
+          kind: 'AI safety',
+          year: '2026',
+          badge: 'Hack Western 13 winner',
+          summary: 'An AI phone line for pharmacies. The AI can be fooled; the pharmacy can’t. Won Best Use of Auth0 at Hack Western 13.',
+          detail:
+            'A voice agent calls patients before their medication runs out, handles routine refill steps and sends exceptions to a pharmacist. It can act only by pressing one of 12 buttons, and a control layer decides each press in code, so a successful prompt injection still cannot do anything the rules forbid. Every spoken sentence passes through a speech guard as well. I built the lock: the shared contract, the control layer, the speech guard, the hammer that throws hostile button sequences at it, the stage view and phone latency. Four people built it in one weekend, each running a coding agent on one role.',
+          stats: [
+            { value: '12', label: 'buttons the agent can press, and nothing else, each checked against rules in code' },
+            { value: '0 / 28', label: 'scenarios where the live agent broke a rule; it reached the expected outcome on 16' },
+            { value: '586 / 624', label: 'red-team attacks that beat the first speech guard, which is why speech is best effort and the buttons are the boundary' },
+          ],
+          tech: ['TypeScript', 'Next.js', 'Claude Agent SDK', 'Auth0', 'Twilio', 'ElevenLabs'],
+          links: [
+            { label: 'Live site', href: 'https://aegis-pharmacy-live-hw13.vercel.app/' },
+            { label: 'Code', href: 'https://github.com/nishantshah0/Aegis-voice-agent' },
+          ],
+        },
         {
           title: 'Video to Humanoid',
           kind: 'Robotics',
